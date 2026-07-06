@@ -13,10 +13,9 @@
 //   3. URL: https://yourdomain.com/api/webhooks/clerk
 //      (for local dev use ngrok: https://abc123.ngrok.app/api/webhooks/clerk)
 //   4. Subscribe to events: "user.created", "user.deleted"
-//   5. Copy the "Signing Secret" → add as CLERK_WEBHOOK_SECRET in .env.local
+//   5. Copy the "Signing Secret" → add as CLERK_WEBHOOK_SIGNING_SECRET in .env.local
 
-import { Webhook } from "svix"; // Clerk uses svix to sign webhooks
-import { headers } from "next/headers";
+import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextResponse } from "next/server";
 import { createUser } from "@/server/services/userService.js";
 import { db } from "@/server/db/index.js";
@@ -24,45 +23,21 @@ import { users } from "@/server/db/schema.js";
 import { eq } from "drizzle-orm";
 
 export async function POST(request) {
-  const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
+  const webhookSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
   if (!webhookSecret) {
-    console.error("CLERK_WEBHOOK_SECRET is not set in .env");
+    console.error("CLERK_WEBHOOK_SIGNING_SECRET is not set in .env");
     return NextResponse.json(
       { error: "Server misconfigured" },
       { status: 500 },
     );
   }
 
-  // -------------------------------------------------------
-  // Verify the webhook signature
-  // This proves the request really came from Clerk,
-  // not from someone trying to fake a user creation.
-  // -------------------------------------------------------
-
-  const headerPayload = await headers();
-  const svixId = headerPayload.get("svix-id");
-  const svixTimestamp = headerPayload.get("svix-timestamp");
-  const svixSignature = headerPayload.get("svix-signature");
-
-  if (!svixId || !svixTimestamp || !svixSignature) {
-    return NextResponse.json(
-      { error: "Missing svix headers" },
-      { status: 400 },
-    );
-  }
-
-  const body = await request.text();
-
   let event;
   try {
-    const wh = new Webhook(webhookSecret);
-    event = wh.verify(body, {
-      "svix-id": svixId,
-      "svix-timestamp": svixTimestamp,
-      "svix-signature": svixSignature,
+    event = await verifyWebhook(request, {
+      signingSecret: webhookSecret,
     });
-
   } catch (err) {
     console.error("Clerk webhook signature verification failed:", err);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });

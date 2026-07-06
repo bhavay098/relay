@@ -11,7 +11,8 @@ export async function POST(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const messages = await tenant.gmail.api.messages.list({});
+    const result = await tenant.gmail.api.messages.list({});
+    const messages = result.messages ?? [];
     return NextResponse.json({
       success: true,
       count: messages.length,

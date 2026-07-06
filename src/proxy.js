@@ -1,4 +1,4 @@
-// CLERK MIDDLEWARE (src/middleware.js)
+// CLERK MIDDLEWARE (src/proxy.js)
 //
 // Runs on every request before routes. Requires login for protected pages.
 
