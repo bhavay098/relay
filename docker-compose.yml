@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:17
+    ports:
+      - "5432:5432"
+    container_name: corsair-postgres-db
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: corsair
+      POSTGRES_PASSWORD: corsair123
+      POSTGRES_DB: corsair
+
+    volumes:
+      - "corsair_data:/var/lib/postgresql/data"
+
+volumes:
+  corsair_data:
