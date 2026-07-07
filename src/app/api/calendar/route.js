@@ -10,6 +10,20 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
 
+function normalizeDateTimeField(value) {
+  if (!value) return undefined;
+  if (typeof value === "string") return { dateTime: value };
+  if (typeof value === "object") return value;
+  return undefined;
+}
+
+function normalizeAttendees(attendees) {
+  if (!Array.isArray(attendees)) return [];
+  return attendees.map((attendee) =>
+    typeof attendee === "string" ? { email: attendee } : attendee,
+  );
+}
+
 // GET /api/calendar — list events from local cache
 
 export async function GET(request) {
@@ -19,7 +33,10 @@ export async function GET(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const events = await tenant.googlecalendar.db.events.search({});
+    const rows = await tenant.googlecalendar.db.events.search({
+      limit: 50,
+    });
+    const events = rows.map((row) => row.data);
     return NextResponse.json({ events });
   } catch (error) {
     console.error("Calendar list error:", error);
@@ -65,11 +82,14 @@ export async function POST(request) {
   try {
     const tenant = corsair.withTenant(userId);
     const event = await tenant.googlecalendar.api.events.create({
-      summary,
-      description: description ?? "",
-      start: { dateTime: start },
-      end: { dateTime: end },
-      attendees: attendees?.map((email) => ({ email })) ?? [],
+      calendarId: "primary",
+      event: {
+        summary,
+        description: description ?? "",
+        start: normalizeDateTimeField(start),
+        end: normalizeDateTimeField(end),
+        attendees: normalizeAttendees(attendees),
+      },
     });
     return NextResponse.json({ success: true, event });
   } catch (error) {

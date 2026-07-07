@@ -1,4 +1,8 @@
 // POST /api/calendar/refresh — force a live fetch from Google Calendar
+//
+// Corsair syncs Google Calendar event data into corsair_entities when a live
+// API call runs. We use events.getMany() to populate the local cache, then read
+// the normalized rows from tenant.googlecalendar.db.events.
 
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
@@ -11,9 +15,18 @@ export async function POST(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const events = await tenant.googlecalendar.api.events.list({
+    await tenant.googlecalendar.api.events.getMany({
       calendarId: "primary",
+      maxResults: 50,
+      singleEvents: true,
+      orderBy: "startTime",
     });
+
+    const rows = await tenant.googlecalendar.db.events.search({
+      limit: 50,
+    });
+    const events = rows.map((row) => row.data);
+
     return NextResponse.json({ success: true, count: events.length, events });
   } catch (error) {
     console.error("Calendar refresh error:", error);

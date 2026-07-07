@@ -16,8 +16,11 @@ export async function GET(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const messages = await tenant.gmail.db.messages.search({});
+    const rows = await tenant.gmail.db.messages.search({});
+    // Unwrap row.data so the shape matches /api/gmail/refresh
+    const messages = rows.map((row) => row.data);
     return NextResponse.json({ messages });
+
   } catch (error) {
     console.error("Gmail list error:", error);
     if (

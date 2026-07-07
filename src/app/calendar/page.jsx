@@ -57,13 +57,10 @@ export default function CalendarPage() {
               className="bg-white rounded-lg shadow p-4 border border-gray-100"
             >
               <p className="font-semibold">
-                {event.summary ?? event.data?.summary ?? "(no title)"}
+                {event.summary ?? "(no title)"}
               </p>
               <p className="text-sm text-gray-500">
-                {event.start?.dateTime ??
-                  event.data?.start?.dateTime ??
-                  event.start?.date ??
-                  ""}
+                {event.start?.dateTime ?? event.start?.date ?? ""}
               </p>
             </li>
           ))}

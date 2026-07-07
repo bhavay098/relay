@@ -5,6 +5,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { UserButton } from "@clerk/nextjs";
 import { ConnectButtons } from "./components/ConnectButtons";
 import { ConnectionStatus } from "./components/ConnectionStatus";
+import { GmailRefreshButton } from "./components/GmailRefreshButton";
+import { CalendarRefreshButton } from "./components/CalendarRefreshButton";
 import { QuickActions } from "./components/QuickActions";
 
 export default async function DashboardPage() {
@@ -41,6 +43,18 @@ export default async function DashboardPage() {
 
           <div className="mb-8">
             <ConnectButtons />
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">Gmail Sync</h3>
+            <GmailRefreshButton />
+          </div>
+
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4">
+              Google Calendar Sync
+            </h3>
+            <CalendarRefreshButton />
           </div>
 
           <hr className="my-6" />

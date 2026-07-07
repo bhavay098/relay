@@ -7,6 +7,20 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
 
+function normalizeDateTimeField(value) {
+  if (!value) return undefined;
+  if (typeof value === "string") return { dateTime: value };
+  if (typeof value === "object") return value;
+  return undefined;
+}
+
+function normalizeAttendees(attendees) {
+  if (!Array.isArray(attendees)) return [];
+  return attendees.map((attendee) =>
+    typeof attendee === "string" ? { email: attendee } : attendee,
+  );
+}
+
 // PUT /api/calendar/[id] — update a calendar event
 // Body: { summary, description, start, end, attendees }
 // Any field can be omitted to leave unchanged
@@ -41,17 +55,17 @@ export async function PUT(request, { params }) {
   try {
     const tenant = corsair.withTenant(userId);
 
-    // Build update object with only provided fields
-    const updateData = {};
-    if (summary) updateData.summary = summary;
-    if (description) updateData.description = description;
-    if (start) updateData.start = { dateTime: start };
-    if (end) updateData.end = { dateTime: end };
-    if (attendees) updateData.attendees = attendees.map((email) => ({ email }));
+    const eventData = {};
+    if (summary) eventData.summary = summary;
+    if (description) eventData.description = description;
+    if (start) eventData.start = normalizeDateTimeField(start);
+    if (end) eventData.end = normalizeDateTimeField(end);
+    if (attendees) eventData.attendees = normalizeAttendees(attendees);
 
     const event = await tenant.googlecalendar.api.events.update({
-      eventId: id,
-      ...updateData,
+      calendarId: "primary",
+      id,
+      event: eventData,
     });
 
     return NextResponse.json({ success: true, event });
@@ -90,7 +104,10 @@ export async function DELETE(request, { params }) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    await tenant.googlecalendar.api.events.delete({ eventId: id });
+    await tenant.googlecalendar.api.events.delete({
+      calendarId: "primary",
+      id,
+    });
 
     return NextResponse.json({ success: true, message: "Event deleted" });
   } catch (error) {

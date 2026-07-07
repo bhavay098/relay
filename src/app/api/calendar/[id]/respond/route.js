@@ -4,11 +4,12 @@
 // Allows users to respond to event invitations with accept/decline/tentative
 
 import { NextResponse } from "next/server";
-import { getAuthUserId } from "@/server/getAuthUserId.js";
+import { currentUser } from "@clerk/nextjs/server";
 import { corsair } from "@/server/corsair.js";
+import { getAuthUserId } from "@/server/getAuthUserId.js";
 
 // POST /api/calendar/[id]/respond — RSVP to an event
-// Body: { status: "accepted" | "declined" | "tentativelyAccepted" }
+// Body: { status: "accepted" | "declined" | "tentativelyAccepted" | "tentative" }
 
 export async function POST(request, { params }) {
   const userId = await getAuthUserId();
@@ -27,7 +28,12 @@ export async function POST(request, { params }) {
   const { status } = body;
 
   // Validate RSVP status
-  const validStatuses = ["accepted", "declined", "tentativelyAccepted"];
+  const validStatuses = [
+    "accepted",
+    "declined",
+    "tentativelyAccepted",
+    "tentative",
+  ];
   if (!status || !validStatuses.includes(status)) {
     return NextResponse.json(
       {
@@ -39,10 +45,14 @@ export async function POST(request, { params }) {
 
   try {
     const tenant = corsair.withTenant(userId);
+    const clerkUser = await currentUser();
+    const primaryEmail = clerkUser?.emailAddresses?.find(
+      (email) => email.id === clerkUser?.primaryEmailAddressId,
+    )?.emailAddress;
 
-    // Get the event first to find the user's attendee entry
     const event = await tenant.googlecalendar.api.events.get({
-      eventId: id,
+      calendarId: "primary",
+      id,
     });
 
     if (!event) {
@@ -52,11 +62,36 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Update the event with the user's RSVP status
-    // Corsair will handle finding the correct attendee and updating their response
+    const attendeeStatus =
+      status === "tentativelyAccepted" ? "tentative" : status;
+    const attendees = Array.isArray(event.attendees) ? [...event.attendees] : [];
+    const selfAttendeeIndex = attendees.findIndex(
+      (attendee) => attendee?.self === true,
+    );
+    const emailAttendeeIndex =
+      selfAttendeeIndex === -1 && primaryEmail
+        ? attendees.findIndex((attendee) => attendee?.email === primaryEmail)
+        : selfAttendeeIndex;
+
+    if (emailAttendeeIndex === -1) {
+      return NextResponse.json(
+        { error: "Unable to determine your attendee record for this event" },
+        { status: 400 },
+      );
+    }
+
+    attendees[emailAttendeeIndex] = {
+      ...attendees[emailAttendeeIndex],
+      responseStatus: attendeeStatus,
+    };
+
     const updatedEvent = await tenant.googlecalendar.api.events.update({
-      eventId: id,
-      attendeeResponse: status,
+      calendarId: "primary",
+      id,
+      event: {
+        ...event,
+        attendees,
+      },
     });
 
     return NextResponse.json({

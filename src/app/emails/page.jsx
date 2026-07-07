@@ -55,10 +55,10 @@ export default function EmailsPage() {
               className="bg-white rounded-lg shadow p-4 border border-gray-100"
             >
               <p className="font-semibold">
-                {message.subject ?? message.data?.subject ?? "(no subject)"}
+                {message.subject ?? "(no subject)"}
               </p>
               <p className="text-sm text-gray-500 truncate">
-                {message.snippet ?? message.data?.snippet ?? ""}
+                {message.snippet ?? ""}
               </p>
             </li>
           ))}
