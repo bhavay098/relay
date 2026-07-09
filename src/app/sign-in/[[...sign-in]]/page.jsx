@@ -1,26 +1,39 @@
-// SIGN-IN PAGE
-
-// The [[...sign-in]] folder name is required by Clerk — don't rename it.
-// Clerk's <SignIn /> component handles everything:
-//   - Email + password form
-//   - "Sign in with Google" button
-//   - Password reset flow
-//   - Error messages
-// You don't need to build any of this yourself.
-
 import { SignIn } from "@clerk/nextjs";
+import { AuthShell } from "../../components/auth/AuthShell";
+import { clerkAppearance } from "../../components/auth/clerkAppearance";
+
+const highlights = [
+  {
+    title: "Resume quickly",
+    body: "Pick up the inbox, calendar, and AI workspace where you left off.",
+  },
+  {
+    title: "One secure login",
+    body: "Use the same Clerk-backed access across all Relay surfaces.",
+  },
+  {
+    title: "Clean handoff",
+    body: "Jump straight into your dashboard after authentication.",
+  },
+];
 
 export default function SignInPage() {
   return (
-    <main
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        minHeight: "100vh",
-      }}
+    <AuthShell
+      eyebrow="Welcome back"
+      title="Sign in and get back to the inbox."
+      description="Relay keeps the next action close by, so you can return to email triage, calendar changes, and AI-assisted drafting without rebuilding context."
+      highlights={highlights}
+      panelEyebrow="Secure access"
+      panelTitle="Sign in"
+      panelDescription="Use your existing Relay account."
     >
-      <SignIn routing="path" path="/sign-in" forceRedirectUrl="/dashboard" />
-    </main>
+      <SignIn
+        appearance={clerkAppearance}
+        routing="path"
+        path="/sign-in"
+        forceRedirectUrl="/dashboard"
+      />
+    </AuthShell>
   );
 }
