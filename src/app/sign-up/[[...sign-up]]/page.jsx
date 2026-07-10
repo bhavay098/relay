@@ -32,6 +32,7 @@ export default function SignUpPage() {
         appearance={clerkAppearance}
         routing="path"
         path="/sign-up"
+        signInUrl="/sign-in"
         forceRedirectUrl="/dashboard"
       />
     </AuthShell>

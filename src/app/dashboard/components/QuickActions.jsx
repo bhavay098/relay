@@ -3,26 +3,28 @@
 import Link from "next/link";
 
 export function QuickActions() {
+  const actions = [
+    { label: "View Emails", href: "/emails" },
+    { label: "View Calendar", href: "/calendar" },
+    { label: "AI Chat", href: "/ai-chat" },
+  ];
+
   return (
-    <div className="flex gap-4 flex-wrap">
-      <Link
-        href="/emails"
-        className="px-6 py-3 bg-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition"
-      >
-        View Emails
-      </Link>
-      <Link
-        href="/calendar"
-        className="px-6 py-3 bg-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition"
-      >
-        View Calendar
-      </Link>
-      <Link
-        href="/ai-chat"
-        className="px-6 py-3 bg-gray-600 border border-gray-300 rounded-lg hover:bg-gray-200 transition"
-      >
-        AI Chat
-      </Link>
+    <div className="grid gap-3">
+      {actions.map((action) => (
+        <Link
+          key={action.href}
+          href={action.href}
+          className="group flex items-center justify-between rounded-[20px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-4 transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface-strong)]"
+        >
+          <span className="text-sm font-medium text-[var(--color-app-text)]">
+            {action.label}
+          </span>
+          <span className="text-xs uppercase tracking-[0.16em] text-[var(--color-app-text-soft)] transition group-hover:text-[var(--color-app-accent)]">
+            Open
+          </span>
+        </Link>
+      ))}
     </div>
   );
 }

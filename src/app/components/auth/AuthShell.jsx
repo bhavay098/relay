@@ -43,7 +43,7 @@ export function AuthShell({
         <div className="home-orbit left-[8%] top-20 hidden h-28 w-28 md:block" />
         <div className="home-orbit right-[8%] top-10 hidden h-36 w-36 lg:block" />
 
-        <div className="mx-auto grid w-full max-w-[1320px] gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-center">
+        <div className="mx-auto grid w-full max-w-[1120px] gap-8 lg:grid-cols-[1fr_0.72fr] lg:items-center">
           <div className="space-y-6 py-4 lg:py-10">
             <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
               {eyebrow}
@@ -72,7 +72,7 @@ export function AuthShell({
             </div>
           </div>
 
-          <div className="home-panel home-panel-strong home-card-hover rounded-[32px] p-5 sm:p-6">
+          <div className="home-panel home-panel-strong home-card-hover mx-auto w-full max-w-[540px] rounded-[32px] p-5 sm:p-6 lg:max-w-none">
             <div className="mb-5 flex items-center justify-between border-b border-[var(--color-app-border)] pb-4">
               <div>
                 <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
@@ -81,10 +81,6 @@ export function AuthShell({
                 <p className="mt-1 text-sm text-[var(--color-app-text-muted)]">
                   {panelDescription}
                 </p>
-              </div>
-
-              <div className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 text-[11px] text-[var(--color-app-text-muted)]">
-                {panelTitle}
               </div>
             </div>
 

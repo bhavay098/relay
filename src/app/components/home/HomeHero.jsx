@@ -14,12 +14,12 @@ export function HomeHero({
 }) {
   return (
     <section className="flex flex-1 items-center justify-center py-14 sm:py-[4.5rem] lg:py-[5.75rem]">
-      <div className="w-full max-w-5xl">
-        <div className="animate-fadeInUp mx-auto max-w-3xl text-center">
+      <div className="w-full max-w-6xl">
+        <div className="animate-fadeInUp mx-auto max-w-6xl text-center">
           <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
             {eyebrow}
           </p>
-          <h1 className="mt-6 text-balance font-[family:var(--font-inter)] text-[clamp(3.15rem,6vw,5.1rem)] font-semibold leading-[0.95] tracking-[-0.065em] text-[var(--color-app-text)]">
+          <h1 className="mt-6 text-balance font-(--font-inter) text-[clamp(3.15rem,6vw,5.1rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
             {title}
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-[16px] leading-8 text-[var(--color-app-text-muted)] sm:text-[17px]">

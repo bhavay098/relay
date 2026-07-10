@@ -4,11 +4,11 @@ export function ProductDock({
   heroActions,
 }) {
   return (
-    <div className="home-panel home-panel-strong home-card-hover relative overflow-hidden rounded-[32px] p-5 sm:p-6">
+    <div className="home-panel home-panel-strong home-card-hover home-dock relative overflow-hidden rounded-[32px] p-5 sm:p-6">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--color-app-accent)] to-transparent opacity-60" />
       <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start">
         <div className="space-y-4">
-          <div className="rounded-[26px] border border-[var(--color-app-border)] bg-[linear-gradient(180deg,rgba(217,119,6,0.12),rgba(16,21,33,0.96))] p-5">
+          <div className="home-dock-workspace rounded-[26px] border border-[var(--color-app-border)] bg-[linear-gradient(180deg,rgba(217,119,6,0.12),rgba(16,21,33,0.96))] p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
@@ -54,13 +54,13 @@ export function ProductDock({
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-[30px] border border-[var(--color-app-border-strong)] bg-[linear-gradient(180deg,rgba(16,21,33,0.94),rgba(10,13,20,0.98))] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
+          <div className="home-dock-priority rounded-[30px] border border-[var(--color-app-border-strong)] bg-[linear-gradient(180deg,rgba(16,21,33,0.94),rgba(10,13,20,0.98))] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
+                <p className="home-dock-priority-kicker font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
                   Priority inbox
                 </p>
-                <p className="mt-1 text-sm text-[var(--color-app-text-muted)]">
+                <p className="home-dock-priority-copy mt-1 text-sm text-[var(--color-app-text-muted)]">
                   Classify first, decide faster
                 </p>
               </div>
@@ -73,7 +73,7 @@ export function ProductDock({
               {commandQueue.map((item) => (
                 <div
                   key={item.title}
-                  className={`rounded-[20px] border px-4 py-4 ${
+                  className={`home-dock-item rounded-[20px] border px-4 py-4 ${
                     item.tone === "priority"
                       ? "border-[var(--color-app-border-strong)] bg-[var(--color-app-surface-strong)]"
                       : "border-[var(--color-app-border)] bg-[var(--color-app-surface)]"
@@ -81,10 +81,10 @@ export function ProductDock({
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-[var(--color-app-text)]">
+                      <p className="home-dock-item-title text-sm font-medium text-[var(--color-app-text)]">
                         {item.title}
                       </p>
-                      <p className="mt-1 text-xs leading-5 text-[var(--color-app-text-muted)]">
+                      <p className="home-dock-item-body mt-1 text-xs leading-5 text-[var(--color-app-text-muted)]">
                         {item.body}
                       </p>
                     </div>
@@ -100,7 +100,7 @@ export function ProductDock({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="home-panel rounded-[26px] p-4">
+            <div className="home-panel home-dock-subcard rounded-[26px] p-4">
               <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
                 Calendar control
               </p>
@@ -114,7 +114,7 @@ export function ProductDock({
               </div>
             </div>
 
-            <div className="home-panel rounded-[26px] p-4">
+            <div className="home-panel home-dock-subcard rounded-[26px] p-4">
               <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
                 Agent actions
               </p>

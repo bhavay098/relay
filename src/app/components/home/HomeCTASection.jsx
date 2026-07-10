@@ -4,11 +4,11 @@ export function HomeCTASection({ eyebrow, title, primaryCta, secondaryCta }) {
   return (
     <section className="mx-auto max-w-330 px-4 pb-20 sm:px-6 lg:px-8 lg:pb-24">
       <div className="home-panel home-panel-strong rounded-4xl px-6 py-8 sm:px-8 sm:py-10 lg:flex lg:items-end lg:justify-between lg:gap-8">
-        <div className="max-w-2xl">
+        <div className="max-w-3xl">
           <p className="font-(--font-inter) text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-app-accent)">
             {eyebrow}
           </p>
-          <h2 className="mt-4 text-balance font-(--font-inter) text-[clamp(2.2rem,5vw,4rem)] font-semibold leading-[1.02] tracking-tighter text-(--color-app-text)">
+          <h2 className="mt-4 text-balance font-(--font-inter) text-[clamp(2.2rem,5vw,4rem)] font-normal leading-[1.02] tracking-tighter text-(--color-app-text)">
             {title}
           </h2>
         </div>

@@ -1,7 +1,9 @@
 import { Inter } from "next/font/google";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Agentation } from "agentation";
+import { IdleSignOut } from "./components/auth/IdleSignOut";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -19,28 +21,27 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
       <html lang="en" className={inter.variable} suppressHydrationWarning>
         <head>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function () {
-                  try {
-                    var theme = localStorage.getItem('relay-theme');
-                    if (theme !== 'light' && theme !== 'dark') {
-                      theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-                    }
-                    document.documentElement.dataset.theme = theme;
-                    document.documentElement.style.colorScheme = theme;
-                  } catch (e) {}
-                })();
-              `,
-            }}
-          />
+          <Script id="relay-theme-init" strategy="beforeInteractive">
+            {`
+              (function () {
+                try {
+                  var theme = localStorage.getItem('relay-theme');
+                  if (theme !== 'light' && theme !== 'dark') {
+                    theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                  }
+                  document.documentElement.dataset.theme = theme;
+                  document.documentElement.style.colorScheme = theme;
+                } catch (e) {}
+              })();
+            `}
+          </Script>
         </head>
         <body className="min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)] antialiased transition-colors duration-300">
           {children}
+          <IdleSignOut />
           {process.env.NODE_ENV === "development" && <Agentation />}
         </body>
       </html>

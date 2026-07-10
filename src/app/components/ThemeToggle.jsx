@@ -53,25 +53,30 @@ function MoonIcon() {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState(() => {
-    if (typeof window === "undefined") {
-      return "dark";
-    }
-
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "dark" || stored === "light") {
-      return stored;
-    }
-
-    return window.matchMedia("(prefers-color-scheme: light)").matches
-      ? "light"
-      : "dark";
-  });
+  const [theme, setTheme] = useState("dark");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    const nextTheme =
+      stored === "dark" || stored === "light"
+        ? stored
+        : window.matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : "dark";
+
+    setTheme(nextTheme);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) {
+      return;
+    }
+
     applyTheme(theme);
     window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+  }, [mounted, theme]);
 
   function toggleTheme() {
     const nextTheme = theme === "dark" ? "light" : "dark";
@@ -83,9 +88,9 @@ export function ThemeToggle() {
       type="button"
       onClick={toggleTheme}
       className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] text-[var(--color-app-text)] transition hover:bg-[var(--color-app-surface-strong)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-app-border-strong)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-app-bg)]"
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      aria-label="Toggle color theme"
     >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+      {mounted && theme === "dark" ? <SunIcon /> : mounted ? <MoonIcon /> : <SunIcon />}
     </button>
   );
 }

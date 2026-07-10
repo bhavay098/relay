@@ -10,12 +10,17 @@ export const clerkAppearance = {
     fontFamily: "var(--font-inter), system-ui, sans-serif",
   },
   elements: {
+    rootBox: "text-[var(--color-app-text)]",
+    cardBox:
+      "bg-[var(--color-app-panel-strong)] text-[var(--color-app-text)] shadow-none border border-[var(--color-app-border-strong)]",
     card: [
       "w-full bg-transparent shadow-none",
       "border-0 p-0",
     ].join(" "),
     headerTitle: "hidden",
     headerSubtitle: "hidden",
+    footer: "bg-transparent text-[var(--color-app-text-muted)]",
+    footerAction: "text-[var(--color-app-text-muted)]",
     socialButtonsBlockButton:
       "border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] shadow-none hover:bg-[var(--color-app-surface)]",
     formButtonPrimary:

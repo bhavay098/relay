@@ -10,18 +10,18 @@ export function ConnectButtons() {
   }
 
   return (
-    <div className="flex gap-4 flex-wrap">
+    <div className="grid gap-3 sm:grid-cols-2">
       <button
         type="button"
         onClick={connectGmail}
-        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+        className="inline-flex min-h-12 items-center justify-center rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-5 py-3 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
       >
         Connect Gmail
       </button>
       <button
         type="button"
         onClick={connectCalendar}
-        className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium"
+        className="inline-flex min-h-12 items-center justify-center rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-5 py-3 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
       >
         Connect Google Calendar
       </button>

@@ -129,14 +129,15 @@ export default function Home() {
 
       <section
         id="workflow"
-        className="mx-auto max-w-[1320px] px-4 py-20 sm:px-6 lg:px-8 lg:py-24"
+        className="mx-auto max-w-[1320px] px-4 pt-12 pb-20 sm:px-6 lg:px-8 lg:pt-14 lg:pb-24"
       >
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-5xl">
           <SectionHeading
             eyebrow="Core workflow"
             title="Connect, classify, schedule, and act without leaving the same command layer."
             body="Relay is designed for work that moves between inbox context, meeting coordination, and agent-assisted execution."
             align="center"
+            headingClassName="mx-auto max-w-4xl"
           />
         </div>
 

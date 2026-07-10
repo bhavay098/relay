@@ -40,14 +40,16 @@ export function CalendarRefreshButton() {
         type="button"
         onClick={refreshCalendar}
         disabled={loading}
-        className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 transition font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(217,119,6,0.2)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Refreshing Calendar..." : "Refresh Calendar"}
       </button>
 
-      <div className="text-sm min-h-5">
-        {status && <p className="text-green-600">{status}</p>}
-        {error && <p className="text-red-600">{error}</p>}
+      <div className="min-h-5 text-sm">
+        {status ? (
+          <p className="text-[var(--color-success)]">{status}</p>
+        ) : null}
+        {error ? <p className="text-[var(--color-error)]">{error}</p> : null}
       </div>
     </div>
   );
