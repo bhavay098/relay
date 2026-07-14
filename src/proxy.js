@@ -1,29 +1,11 @@
 // CLERK MIDDLEWARE (src/proxy.js)
 //
-// Runs on every request before routes. Requires login for protected pages.
+// Clerk still needs middleware initialized, but route protection now lives
+// alongside the protected pages and route handlers themselves.
 
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-const isPublicRoute = createRouteMatcher([
-  "/",
-  "/sign-in(.*)",
-  "/sign-up(.*)",
-  "/api/auth/(.*)",
-  "/api/webhook(.*)",
-  "/api/webhooks/(.*)",
-]);
-
-export default clerkMiddleware(
-  async (auth, req) => {
-    if (!isPublicRoute(req)) {
-      await auth.protect();
-    }
-  },
-  {
-    signInUrl: "/sign-in",
-    signUpUrl: "/sign-up",
-  },
-);
+export default clerkMiddleware();
 
 export const config = {
   matcher: [

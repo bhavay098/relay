@@ -150,7 +150,7 @@ export default function AiChatPage() {
         </p>
         <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
-            <h2 className="text-balance font-[family:var(--font-inter)] text-[clamp(1.8rem,3.8vw,3rem)] font-normal leading-[1.04] tracking-[-0.04em] text-[var(--color-app-text)]">
+            <h2 className="text-balance font-[family:var(--font-inter)] text-[clamp(1.8rem,3.8vw,3rem)] font-normal leading-tight tracking-tight text-[var(--color-app-text)]">
               Ask the agent to work your inbox and calendar from one surface.
             </h2>
             <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--color-app-text-muted)]">

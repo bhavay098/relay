@@ -1,7 +1,15 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { AppSidebar } from "./components/AppSidebar.jsx";
 import { AppTopbar } from "./components/AppTopbar.jsx";
 
-export default function AppLayout({ children }) {
+export default async function AppLayout({ children }) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    redirect("/sign-in");
+  }
+
   return (
     <div className="app-page home-grid-bg gradient-mesh min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
       <AppSidebar />
