@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkBreaks from "remark-breaks";
+import remarkGfm from "remark-gfm";
+import rehypeSanitize from "rehype-sanitize";
 
 function parseSseChunk(buffer, onEvent) {
   const parts = buffer.split("\n\n");
@@ -28,6 +32,72 @@ function parseSseChunk(buffer, onEvent) {
 
 const CHAT_REQUEST_ERROR = "Could not start the chat right now.";
 const CHAT_STREAM_ERROR = "I hit an error while responding. Please try again.";
+
+function AssistantMessageContent({ content, loading }) {
+  if (!content) {
+    return loading ? "…" : " ";
+  }
+
+  return (
+    <div className="ai-markdown">
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
+        rehypePlugins={[rehypeSanitize]}
+        components={{
+          a({ children, ...props }) {
+            return (
+              <a
+                {...props}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="ai-markdown-link"
+              >
+                {children}
+              </a>
+            );
+          },
+          blockquote({ children, ...props }) {
+            return (
+              <blockquote {...props} className="ai-markdown-quote">
+                {children}
+              </blockquote>
+            );
+          },
+          code({ className, children, ...props }) {
+            const isBlock = className?.includes("language-");
+            if (isBlock) {
+              return (
+                <code {...props} className={className}>
+                  {children}
+                </code>
+              );
+            }
+
+            return (
+              <code {...props} className="ai-markdown-inline-code">
+                {children}
+              </code>
+            );
+          },
+          pre({ children }) {
+            return <pre className="ai-markdown-pre">{children}</pre>;
+          },
+          table({ children, ...props }) {
+            return (
+              <div className="ai-markdown-table-wrap">
+                <table {...props} className="ai-markdown-table">
+                  {children}
+                </table>
+              </div>
+            );
+          },
+        }}
+      >
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export default function AiChatPage() {
   const [messages, setMessages] = useState([
@@ -198,10 +268,16 @@ export default function AiChatPage() {
                     message.role === "user"
                       ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
                       : "border border-[var(--color-app-border)] bg-[var(--color-app-surface)] text-[var(--color-app-text)]"
-                  } whitespace-pre-wrap`}
+                  } ${message.role === "assistant" ? "ai-assistant-bubble" : "whitespace-pre-wrap"}`}
                 >
-                  {message.content ||
-                    (message.role === "assistant" && loading ? "…" : " ")}
+                  {message.role === "assistant" ? (
+                    <AssistantMessageContent
+                      content={message.content}
+                      loading={loading}
+                    />
+                  ) : (
+                    message.content
+                  )}
                 </div>
               </div>
             ))}

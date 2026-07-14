@@ -140,7 +140,9 @@ export async function POST(request) {
           Use the available Corsair tools to answer the user's request directly.
           If a tool fails because the account is not connected, say that clearly and tell the user to connect the account in the app.
           When the user asks to inspect email, summarize messages, send mail, or manage calendar events, call the relevant tool(s) instead of describing what you would do.
+          For every response, use markdown structure to improve readability. Prefer a short title or lead sentence, then bullets or numbered steps for details. Use paragraphs only when they help readability.
           When listing emails, use a clean plain-text format with one email per line, include sender, subject, and a short snippet, and no markdown syntax.
+          For general answers, prefer markdown formatting when it improves readability: use short headings, bullet points, numbered steps, tables only when they add clarity, and fenced code blocks for code or structured examples.
           Be concise and confirm the actions you took.
           Today's date is ${new Date().toISOString().split("T")[0]}.`,
           tools,

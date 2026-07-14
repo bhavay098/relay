@@ -534,10 +534,10 @@ body {
 
 .home-page.gradient-mesh {
   background:
-    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.18) 0%, transparent 30%),
-    radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 20%, rgba(255, 255, 255, 0.04) 0%, transparent 45%),
-    radial-gradient(ellipse at 40% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 50% 12%, rgba(255, 255, 255, 0.09) 0%, transparent 30%),
+    radial-gradient(ellipse at 20% 50%, rgba(255, 255, 255, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(255, 255, 255, 0.02) 0%, transparent 45%),
+    radial-gradient(ellipse at 40% 80%, rgba(255, 255, 255, 0.015) 0%, transparent 50%),
     var(--color-app-bg);
 }
 
@@ -565,7 +565,7 @@ body {
 
 .home-page .home-spotlight {
   background:
-    radial-gradient(circle, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 26%, transparent 68%);
+    radial-gradient(circle, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.035) 26%, transparent 68%);
 }
 
 
@@ -655,4 +655,147 @@ body {
   box-shadow:
     1px 0 0 rgba(255, 255, 255, 0.95) inset,
     12px 0 36px rgba(15, 23, 42, 0.08);
+}
+
+/* ═══════════ AI Chat Markdown ═══════════ */
+
+.ai-assistant-bubble {
+  line-height: 1.65;
+}
+
+.ai-markdown {
+  width: 100%;
+  color: inherit;
+  word-break: break-word;
+}
+
+.ai-markdown > :first-child {
+  margin-top: 0;
+}
+
+.ai-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-markdown {
+  font-size: 0.95rem;
+}
+
+.ai-markdown p {
+  line-height: 1.7;
+}
+
+.ai-markdown p,
+.ai-markdown ul,
+.ai-markdown ol,
+.ai-markdown blockquote,
+.ai-markdown pre,
+.ai-markdown table {
+  margin: 0 0 0.9rem;
+}
+
+.ai-markdown h1,
+.ai-markdown h2,
+.ai-markdown h3,
+.ai-markdown h4,
+.ai-markdown h5,
+.ai-markdown h6 {
+  margin: 1rem 0 0.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.ai-markdown h1 {
+  font-size: 1.45rem;
+}
+
+.ai-markdown h2 {
+  font-size: 1.25rem;
+}
+
+.ai-markdown h3 {
+  font-size: 1.1rem;
+}
+
+.ai-markdown ul,
+.ai-markdown ol {
+  padding-left: 1.25rem;
+}
+
+.ai-markdown li + li {
+  margin-top: 0.35rem;
+}
+
+.ai-markdown li > p {
+  margin-bottom: 0.4rem;
+}
+
+.ai-markdown a {
+  color: var(--color-app-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.ai-markdown strong {
+  font-weight: 700;
+}
+
+.ai-markdown-quote {
+  border-left: 2px solid var(--color-app-border-strong);
+  padding: 0.15rem 0 0.15rem 0.9rem;
+  color: var(--color-app-text-muted);
+  font-style: italic;
+}
+
+.ai-markdown-inline-code {
+  border-radius: 0.4rem;
+  border: 1px solid var(--color-app-border);
+  background: color-mix(in srgb, var(--color-app-surface-strong) 78%, transparent);
+  padding: 0.15rem 0.35rem;
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.ai-markdown-pre {
+  overflow-x: auto;
+  border-radius: 1rem;
+  border: 1px solid var(--color-app-border);
+  background: color-mix(in srgb, var(--color-app-surface-strong) 92%, black);
+  padding: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.ai-markdown-pre code {
+  font-family: inherit;
+  font-size: inherit;
+  background: transparent;
+  padding: 0;
+  border: 0;
+}
+
+.ai-markdown-table-wrap {
+  overflow-x: auto;
+  margin-bottom: 0.9rem;
+}
+
+.ai-markdown-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 100%;
+}
+
+.ai-markdown-table th,
+.ai-markdown-table td {
+  border: 1px solid var(--color-app-border);
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.ai-markdown-table th {
+  background: color-mix(in srgb, var(--color-app-surface-strong) 78%, transparent);
+  font-weight: 700;
 }
