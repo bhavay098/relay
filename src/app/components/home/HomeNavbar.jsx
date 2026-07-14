@@ -5,7 +5,7 @@ export function HomeNavbar({ navLinks }) {
   return (
     <header className="sticky top-3 z-50 px-4 sm:top-4 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-[1320px]">
-        <div className="animate-fadeInDown home-glass rounded-[24px] px-4 py-3 sm:px-5">
+        <div className="animate-fadeInDown home-glass home-navbar-shell rounded-[24px] px-4 py-3 sm:px-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div className="flex items-center justify-between gap-4">
               <Link

@@ -1,7 +1,7 @@
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
-import "./globals.css";
+import "@/globals.css";
 import { Agentation } from "agentation";
 import { IdleSignOut } from "./components/auth/IdleSignOut";
 
@@ -13,7 +13,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Relay — Superhuman-Style Email & Calendar",
+  title: "Relay — AI Powered Gmail & Calendar",
   description:
     "A premium Gmail and Google Calendar workflow app powered by Corsair. Manage emails, schedule events, and chat with an AI agent — all from one blazing-fast interface.",
   keywords: ["email", "calendar", "gmail", "google calendar", "corsair", "AI", "productivity"],
@@ -34,7 +34,7 @@ export default function RootLayout({ children }) {
                   }
                   document.documentElement.dataset.theme = theme;
                   document.documentElement.style.colorScheme = theme;
-                } catch (e) {}
+                } catch (e) {}z
               })();
             `}
           </Script>

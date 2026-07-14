@@ -8,7 +8,7 @@ export function ProductDock({
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[var(--color-app-accent)] to-transparent opacity-60" />
       <div className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr] xl:items-start">
         <div className="space-y-4">
-          <div className="home-dock-workspace rounded-[26px] border border-[var(--color-app-border)] bg-[linear-gradient(180deg,rgba(217,119,6,0.12),rgba(16,21,33,0.96))] p-5">
+          <div className="home-dock-workspace rounded-[26px] border border-[var(--color-app-border)] bg-[linear-gradient(180deg,rgba(244,247,251,0.14),rgba(16,21,33,0.96))] p-5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
@@ -89,7 +89,7 @@ export function ProductDock({
                       </p>
                     </div>
                     {item.tone === "priority" ? (
-                      <span className="rounded-md bg-[var(--color-app-accent-soft)] px-2 py-1 text-[10px] uppercase tracking-[1px] text-[var(--color-app-accent)]">
+                    <span className="rounded-md bg-[var(--color-app-accent-soft)] px-2 py-1 text-[10px] uppercase tracking-[1px] text-[var(--color-app-accent)]">
                         High
                       </span>
                     ) : null}

@@ -8,13 +8,13 @@ export function HomeCTASection({ eyebrow, title, primaryCta, secondaryCta }) {
           <p className="font-(--font-inter) text-[11px] font-semibold uppercase tracking-[0.18em] text-(--color-app-accent)">
             {eyebrow}
           </p>
-          <h2 className="mt-4 text-balance font-(--font-inter) text-[clamp(2.2rem,5vw,4rem)] font-normal leading-[1.02] tracking-tighter text-(--color-app-text)">
+          <h2 className="mt-4 text-balance font-(--font-inter) text-[clamp(2.2rem,5vw,4rem)] font-normal leading-tight tracking-tight text-(--color-app-text)">
             {title}
           </h2>
         </div>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:mt-0">
-          <Link href={primaryCta.href} className="inline-flex items-center justify-center rounded-lg bg-(--color-app-accent) px-6 py-3 text-sm font-semibold text-white transition hover:opacity-95">
+          <Link href={primaryCta.href} className="inline-flex items-center justify-center rounded-lg bg-[var(--color-app-accent)] px-6 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:opacity-95">
             {primaryCta.label}
           </Link>
           <Link

@@ -24,7 +24,7 @@ export const clerkAppearance = {
     socialButtonsBlockButton:
       "border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] shadow-none hover:bg-[var(--color-app-surface)]",
     formButtonPrimary:
-      "bg-[var(--color-app-accent)] text-white shadow-[0_18px_50px_rgba(217,119,6,0.2)] hover:brightness-110",
+      "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)] shadow-[0_18px_50px_rgba(15,23,42,0.12)] hover:brightness-110",
     formFieldInput:
       "border border-[var(--color-app-border)] bg-[var(--color-app-surface-soft)] text-[var(--color-app-text)] shadow-none focus:border-[var(--color-app-border-strong)]",
     formFieldLabel: "text-[var(--color-app-text-soft)]",

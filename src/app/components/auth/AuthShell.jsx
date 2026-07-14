@@ -12,10 +12,10 @@ export function AuthShell({
   children,
 }) {
   return (
-    <main className="home-grid-bg gradient-mesh min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
+    <main className="home-page home-grid-bg gradient-mesh min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
       <header className="sticky top-3 z-50 px-4 pt-4 sm:top-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1320px]">
-          <div className="home-glass rounded-[24px] px-4 py-3 sm:px-5">
+          <div className="home-glass home-navbar-shell rounded-[24px] px-4 py-3 sm:px-5">
             <div className="flex items-center justify-between gap-4">
               <Link
                 href="/"

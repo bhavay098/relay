@@ -2,30 +2,33 @@
 
 import { useState } from "react";
 
-export function GmailRefreshButton() {
+export function CalendarRefreshButton({ onRefreshed }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
   const [error, setError] = useState(null);
 
-  async function refreshGmail() {
+  async function refreshCalendar() {
     setLoading(true);
     setStatus(null);
     setError(null);
 
     try {
-      const res = await fetch("/api/gmail/refresh", {
+      const res = await fetch("/api/calendar/refresh", {
         method: "POST",
       });
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to refresh Gmail");
+        setError(data.error ?? "Failed to refresh Google Calendar");
         return;
       }
 
-      setStatus(`Fetched ${data.count ?? 0} message${data.count === 1 ? "" : "s"}.`);
+      setStatus(
+        `Fetched ${data.count ?? 0} event${data.count === 1 ? "" : "s"}.`,
+      );
+      onRefreshed?.();
     } catch (err) {
-      setError("Failed to refresh Gmail");
+      setError("Failed to refresh Google Calendar");
       console.error(err);
     } finally {
       setLoading(false);
@@ -36,11 +39,11 @@ export function GmailRefreshButton() {
     <div className="space-y-3">
       <button
         type="button"
-        onClick={refreshGmail}
+        onClick={refreshCalendar}
         disabled={loading}
-        className="inline-flex min-h-12 w-full items-center justify-center rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(217,119,6,0.2)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] shadow-[0_18px_50px_rgba(15,23,42,0.12)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
       >
-        {loading ? "Refreshing Gmail..." : "Refresh Gmail"}
+        {loading ? "Refreshing Calendar..." : "Refresh Calendar"}
       </button>
 
       <div className="min-h-5 text-sm">

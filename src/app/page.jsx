@@ -104,7 +104,7 @@ const footerLinks = [
 
 export default function Home() {
   return (
-    <main className="home-grid-bg gradient-mesh min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
+    <main className="home-page home-grid-bg gradient-mesh min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
       <HomeNavbar navLinks={navLinks} />
 
       <section className="home-grid-perspective relative isolate overflow-x-hidden">

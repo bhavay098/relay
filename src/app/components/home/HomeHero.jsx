@@ -29,7 +29,7 @@ export function HomeHero({
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Link
               href={primaryCta.href}
-              className="inline-flex items-center justify-center rounded-full bg-[var(--color-app-accent)] px-6 py-3 text-sm font-semibold text-white shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_18px_50px_rgba(217,119,6,0.2)] transition hover:brightness-110"
+              className="inline-flex items-center justify-center rounded-full bg-[var(--color-app-accent)] px-6 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_18px_50px_rgba(15,23,42,0.12)] transition hover:brightness-110"
             >
               {primaryCta.label}
             </Link>
