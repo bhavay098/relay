@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+const CONNECTIONS_ERROR = "Could not load connection status right now.";
+
 export function ConnectionStatus() {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -14,14 +16,15 @@ export function ConnectionStatus() {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? "Failed to check connections");
+          console.error("Connection status error response:", data);
+          setError(CONNECTIONS_ERROR);
           return;
         }
 
         setStatus(data.connections);
       } catch (err) {
-        setError("Failed to check connections");
         console.error(err);
+        setError(CONNECTIONS_ERROR);
       } finally {
         setLoading(false);
       }

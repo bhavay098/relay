@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const INBOX_PREVIEW_ERROR = "Could not load inbox messages right now.";
+
 export function InboxPreview({ refreshKey }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,15 +18,16 @@ export function InboxPreview({ refreshKey }) {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? "Failed to load emails");
+          console.error("Inbox preview error response:", data);
+          setError(INBOX_PREVIEW_ERROR);
           return;
         }
 
         setMessages(data.messages ?? []);
         setError(null);
       } catch (err) {
-        setError("Failed to load emails");
         console.error(err);
+        setError(INBOX_PREVIEW_ERROR);
       } finally {
         setLoading(false);
       }

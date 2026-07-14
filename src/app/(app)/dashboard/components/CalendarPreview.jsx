@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const CALENDAR_PREVIEW_ERROR = "Could not load upcoming events right now.";
+
 // Turn a Google Calendar start object into a short readable string,
 // e.g. "Jul 14, 3:00 PM" or "Jul 14" for all-day events.
 function formatEventTime(start) {
@@ -44,7 +46,8 @@ export function CalendarPreview({ refreshKey }) {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? "Failed to load events");
+          console.error("Calendar preview error response:", data);
+          setError(CALENDAR_PREVIEW_ERROR);
           return;
         }
 
@@ -71,8 +74,8 @@ export function CalendarPreview({ refreshKey }) {
         setUpcoming(nextUpcoming);
         setError(null);
       } catch (err) {
-        setError("Failed to load events");
         console.error(err);
+        setError(CALENDAR_PREVIEW_ERROR);
       } finally {
         setLoading(false);
       }

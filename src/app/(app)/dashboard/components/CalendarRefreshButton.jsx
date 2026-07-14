@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const CALENDAR_REFRESH_ERROR = "Could not refresh Google Calendar right now.";
+
 export function CalendarRefreshButton({ onRefreshed }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
@@ -19,7 +21,8 @@ export function CalendarRefreshButton({ onRefreshed }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to refresh Google Calendar");
+        console.error("Calendar refresh error response:", data);
+        setError(CALENDAR_REFRESH_ERROR);
         return;
       }
 
@@ -28,8 +31,8 @@ export function CalendarRefreshButton({ onRefreshed }) {
       );
       onRefreshed?.();
     } catch (err) {
-      setError("Failed to refresh Google Calendar");
       console.error(err);
+      setError(CALENDAR_REFRESH_ERROR);
     } finally {
       setLoading(false);
     }

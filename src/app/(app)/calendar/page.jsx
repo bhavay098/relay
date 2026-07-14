@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const CALENDAR_PAGE_ERROR = "Could not load events right now.";
+
 // Turn a Google Calendar start object into a readable string.
 function formatEventTime(start) {
   const raw = start?.dateTime ?? start?.date;
@@ -40,14 +42,15 @@ export default function CalendarPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? "Failed to load events");
+          console.error("Calendar page error response:", data);
+          setError(CALENDAR_PAGE_ERROR);
           return;
         }
 
         setEvents(data.events ?? []);
       } catch (err) {
-        setError("Failed to load events");
         console.error(err);
+        setError(CALENDAR_PAGE_ERROR);
       } finally {
         setLoading(false);
       }

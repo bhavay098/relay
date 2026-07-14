@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+const GMAIL_REFRESH_ERROR = "Could not refresh Gmail right now.";
+
 export function GmailRefreshButton({ onRefreshed }) {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(null);
@@ -19,7 +21,8 @@ export function GmailRefreshButton({ onRefreshed }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Failed to refresh Gmail");
+        console.error("Gmail refresh error response:", data);
+        setError(GMAIL_REFRESH_ERROR);
         return;
       }
 
@@ -28,8 +31,8 @@ export function GmailRefreshButton({ onRefreshed }) {
       );
       onRefreshed?.();
     } catch (err) {
-      setError("Failed to refresh Gmail");
       console.error(err);
+      setError(GMAIL_REFRESH_ERROR);
     } finally {
       setLoading(false);
     }

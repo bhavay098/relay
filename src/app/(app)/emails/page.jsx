@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+const EMAILS_ERROR = "Could not load emails right now.";
+
 function formatSender(from) {
   if (!from) return "";
   if (typeof from === "string") return from;
@@ -29,14 +31,15 @@ export default function EmailsPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.error ?? "Failed to load emails");
+          console.error("Emails page error response:", data);
+          setError(EMAILS_ERROR);
           return;
         }
 
         setMessages(data.messages ?? []);
       } catch (err) {
-        setError("Failed to load emails");
         console.error(err);
+        setError(EMAILS_ERROR);
       } finally {
         setLoading(false);
       }

@@ -26,6 +26,9 @@ function parseSseChunk(buffer, onEvent) {
   return remainder;
 }
 
+const CHAT_REQUEST_ERROR = "Could not start the chat right now.";
+const CHAT_STREAM_ERROR = "I hit an error while responding. Please try again.";
+
 export default function AiChatPage() {
   const [messages, setMessages] = useState([
     {
@@ -74,7 +77,8 @@ export default function AiChatPage() {
 
       if (!response.ok || !response.body) {
         const data = await response.json().catch(() => null);
-        throw new Error(data?.error ?? "Chat request failed");
+        console.error("AI chat error response:", data);
+        throw new Error(CHAT_REQUEST_ERROR);
       }
 
       const reader = response.body.getReader();
@@ -104,7 +108,7 @@ export default function AiChatPage() {
           }
 
           if (event.type === "error") {
-            setError("I hit an error while responding. Please try again.");
+            setError(CHAT_STREAM_ERROR);
             setMessages((current) => {
               const copy = [...current];
               const lastIndex = copy.length - 1;
@@ -120,7 +124,8 @@ export default function AiChatPage() {
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Chat request failed");
+      console.error(err);
+      setError(err instanceof Error ? err.message : CHAT_REQUEST_ERROR);
     } finally {
       setLoading(false);
     }
