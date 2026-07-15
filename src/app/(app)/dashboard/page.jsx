@@ -29,26 +29,26 @@ export default async function DashboardPage() {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
-            {[
-              { label: "Inbox", value: "Live", body: "Recent mail and thread context" },
-              { label: "Calendar", value: "Ready", body: "Upcoming events and changes" },
-              { label: "Agent", value: "On deck", body: "Drafts and follow-up actions" },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-[22px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-4"
-              >
-                <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
-                  {item.label}
-                </p>
-                <p className="mt-3 text-lg font-semibold tracking-tight text-[var(--color-app-text)]">
-                  {item.value}
-                </p>
-                <p className="mt-2 text-xs leading-5 text-[var(--color-app-text-muted)]">
-                  {item.body}
-                </p>
-              </div>
-            ))}
+              {[
+                { label: "Inbox", value: "Live", body: "Recent mail and thread context" },
+                { label: "Calendar", value: "Ready", body: "Upcoming events and changes" },
+                { label: "Agent", value: "On deck", body: "Drafts and follow-up actions" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="rounded-[22px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-4"
+                >
+                  <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
+                    {item.label}
+                  </p>
+                  <p className="mt-3 text-lg font-semibold tracking-tight text-[var(--color-app-text)]">
+                    {item.value}
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--color-app-text-muted)]">
+                    {item.body}
+                  </p>
+                </div>
+              ))}
           </div>
         </div>
       </section>

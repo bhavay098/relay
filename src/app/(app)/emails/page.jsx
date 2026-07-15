@@ -87,7 +87,12 @@ export default function EmailsPage() {
 
       {!loading && !error && messages.length === 0 ? (
         <div className="home-panel rounded-[28px] p-6 text-sm text-[var(--color-app-text-muted)]">
-          No emails in cache. Connect Gmail and refresh from the Brief page.
+          No emails are in the local cache yet. That usually means Gmail has
+          not been provisioned or refreshed for this account.
+          <div className="mt-2">
+            Connect Gmail, then refresh from the Brief page to populate the
+            inbox.
+          </div>
         </div>
       ) : null}
 

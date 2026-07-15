@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 const CALENDAR_REFRESH_ERROR = "Could not refresh Google Calendar right now.";
+const CALENDAR_RECONNECT_ERROR =
+  "Google Calendar access has expired or been revoked. Reconnect Google Calendar and try again.";
 
 export function CalendarRefreshButton({ onRefreshed }) {
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,11 @@ export function CalendarRefreshButton({ onRefreshed }) {
 
       if (!res.ok) {
         console.error("Calendar refresh error response:", data);
-        setError(CALENDAR_REFRESH_ERROR);
+        setError(
+          data?.error === CALENDAR_RECONNECT_ERROR
+            ? CALENDAR_RECONNECT_ERROR
+            : CALENDAR_REFRESH_ERROR,
+        );
         return;
       }
 

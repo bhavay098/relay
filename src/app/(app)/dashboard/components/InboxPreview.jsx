@@ -68,8 +68,11 @@ export function InboxPreview({ refreshKey }) {
 
         {!loading && !error && preview.length === 0 && (
           <p className="text-sm text-[var(--color-app-text-muted)]">
-            No emails in cache. Connect Gmail and refresh from Integration
-            health below.
+            No emails are in the local cache yet. Gmail may not have been
+            provisioned or refreshed for this account.
+            <span className="block mt-2">
+              Connect Gmail, then refresh from Integration health below.
+            </span>
           </p>
         )}
 

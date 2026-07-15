@@ -8,6 +8,15 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
 
+function isGoogleGrantError(error) {
+  const message = `${error?.message ?? ""} ${error?.cause?.message ?? ""}`;
+  return (
+    message.includes("invalid_grant") ||
+    message.includes("Token has been expired or revoked") ||
+    message.includes("credentials")
+  );
+}
+
 export async function POST(request) {
   const userId = await getAuthUserId();
   if (!userId)
@@ -30,10 +39,17 @@ export async function POST(request) {
     return NextResponse.json({ success: true, count: events.length, events });
   } catch (error) {
     console.error("Calendar refresh error:", error);
-    if (
-      error.message?.includes("No account") ||
-      error.message?.includes("credentials")
-    ) {
+    if (isGoogleGrantError(error)) {
+      return NextResponse.json(
+        {
+          error:
+            "Google Calendar access has expired or been revoked. Reconnect Google Calendar and try again.",
+        },
+        { status: 401 },
+      );
+    }
+
+    if (error.message?.includes("No account")) {
       return NextResponse.json(
         { error: "Google Calendar not connected." },
         { status: 401 },

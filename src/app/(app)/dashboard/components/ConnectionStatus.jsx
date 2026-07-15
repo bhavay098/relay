@@ -6,6 +6,7 @@ const CONNECTIONS_ERROR = "Could not load connection status right now.";
 
 export function ConnectionStatus() {
   const [status, setStatus] = useState(null);
+  const [issues, setIssues] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -22,6 +23,7 @@ export function ConnectionStatus() {
         }
 
         setStatus(data.connections);
+        setIssues(data.issues ?? null);
       } catch (err) {
         console.error(err);
         setError(CONNECTIONS_ERROR);
@@ -53,10 +55,12 @@ export function ConnectionStatus() {
     {
       label: "Gmail",
       connected: Boolean(status?.gmail),
+      issue: issues?.gmail,
     },
     {
       label: "Google Calendar",
       connected: Boolean(status?.googlecalendar),
+      issue: issues?.googlecalendar,
     },
   ];
 
@@ -85,10 +89,15 @@ export function ConnectionStatus() {
                     ? "text-[var(--color-success)]"
                     : "text-[var(--color-app-text-muted)]"
                 }`}
-              >
-                {service.connected ? "Connected" : "Not connected"}
-              </span>
+                >
+                  {service.connected ? "Connected" : "Not connected"}
+                </span>
             </div>
+            {service.issue ? (
+              <p className="mt-3 text-xs leading-6 text-[var(--color-error)]">
+                {service.issue}
+              </p>
+            ) : null}
           </div>
         ))}
       </div>
