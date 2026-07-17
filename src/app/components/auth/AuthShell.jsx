@@ -16,7 +16,7 @@ export function AuthShell({
       <header className="sticky top-3 z-50 px-4 pt-4 sm:top-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-[1320px]">
           <div className="home-glass home-navbar-shell rounded-[24px] px-4 py-3 sm:px-5">
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <Link
                 href="/"
                 className="font-[family:var(--font-inter)] text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-app-text)]"
@@ -55,7 +55,7 @@ export function AuthShell({
               {description}
             </p>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {highlights.map((item) => (
                 <div
                   key={item.title}

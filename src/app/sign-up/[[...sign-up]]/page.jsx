@@ -1,3 +1,5 @@
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import { SignUp } from "@clerk/nextjs";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { clerkAppearance } from "../../components/auth/clerkAppearance";
@@ -18,6 +20,12 @@ const highlights = [
 ];
 
 export default function SignUpPage() {
+  const { userId } = auth();
+
+  if (userId) {
+    redirect("/dashboard");
+  }
+
   return (
     <AuthShell
       eyebrow="Create your workspace"

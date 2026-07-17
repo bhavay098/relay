@@ -19,7 +19,7 @@ export function HomeHero({
           <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
             {eyebrow}
           </p>
-          <h1 className="mt-6 text-balance font-(--font-inter) text-[clamp(3.15rem,6vw,5.1rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
+          <h1 className="mt-6 text-balance font-[family:var(--font-inter)] text-[clamp(1.8rem,6vw,5.1rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
             {title}
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-[16px] leading-8 text-[var(--color-app-text-muted)] sm:text-[17px]">

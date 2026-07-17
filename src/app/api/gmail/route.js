@@ -6,6 +6,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
+import { sendGmailMessage } from "@/server/services/gmailService.js";
 
 // GET /api/gmail — list emails from local cache
 
@@ -16,9 +17,16 @@ export async function GET(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const rows = await tenant.gmail.db.messages.search({});
-    // Unwrap row.data so the shape matches /api/gmail/refresh
-    const messages = rows.map((row) => row.data);
+    const rows = await tenant.gmail.db.messages.search({ limit: 50 });
+    // `messages.list` caches ID-only references. Only return records that a
+    // detail fetch has hydrated, so the UI never renders empty message cards.
+    const messages = [];
+    for (const row of rows) {
+      const message = row.data;
+      if (message.payload || message.subject || message.snippet) {
+        messages.push(message);
+      }
+    }
     return NextResponse.json({ messages });
 
   } catch (error) {
@@ -64,7 +72,7 @@ export async function POST(request) {
 
   try {
     const tenant = corsair.withTenant(userId);
-    const result = await tenant.gmail.api.messages.send({
+    const result = await sendGmailMessage(tenant, {
       to,
       subject,
       body: emailBody,

@@ -49,7 +49,7 @@ export default function EmailsPage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-[1320px] space-y-6">
+    <div className="mx-auto max-w-[1320px] space-y-6 px-4 sm:px-6 lg:px-8">
       <section className="home-panel home-panel-strong rounded-[32px] p-6 sm:p-8 lg:p-10">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-3xl">
@@ -66,7 +66,7 @@ export default function EmailsPage() {
 
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
+            className="inline-flex w-full items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:w-auto"
           >
             Back to brief
           </Link>
@@ -115,7 +115,7 @@ export default function EmailsPage() {
                 </p>
               </div>
               {message.date ? (
-                <span className="shrink-0 text-xs text-[var(--color-app-text-soft)]">
+                <span className="shrink-0 text-xs text-[var(--color-app-text-soft)] sm:text-right">
                   {message.date}
                 </span>
               ) : null}

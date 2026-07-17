@@ -10,7 +10,8 @@
     "lint": "eslint",
     "studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "drizzle-kit migrate",
+    "doctor": "npx react-doctor@latest"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.2",
@@ -40,6 +41,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "react-doctor": "^0.7.8",
     "tailwindcss": "^4"
   }
 }

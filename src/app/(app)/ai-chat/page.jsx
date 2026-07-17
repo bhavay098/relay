@@ -33,6 +33,245 @@ function parseSseChunk(buffer, onEvent) {
 const CHAT_REQUEST_ERROR = "Could not start the chat right now.";
 const CHAT_STREAM_ERROR = "I hit an error while responding. Please try again.";
 
+function actionTitle(action) {
+  if (action.kind === "email") return "Review email draft";
+  if (action.kind === "calendar_create") return "Review new calendar event";
+  if (action.kind === "calendar_update") return "Review calendar update";
+  return "Confirm calendar deletion";
+}
+
+function actionSuccessMessage(action) {
+  if (action.kind === "email") return "Email sent.";
+  if (action.kind === "calendar_create") return "Calendar event created.";
+  if (action.kind === "calendar_update") return "Calendar event updated.";
+  return "Calendar event deleted.";
+}
+
+function confirmButtonLabel(action) {
+  if (action.kind === "email") return "Send email";
+  if (action.kind === "calendar_create") return "Create event";
+  if (action.kind === "calendar_delete") return "Delete event";
+  return "Save changes";
+}
+
+function toDateTimeLocalValue(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  const pad = (number) => String(number).padStart(2, "0");
+  return [
+    date.getFullYear(),
+    pad(date.getMonth() + 1),
+    pad(date.getDate()),
+  ].join("-").concat(`T${pad(date.getHours())}:${pad(date.getMinutes())}`);
+}
+
+function toIsoDateTime(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toISOString();
+}
+
+function attendeesToInputValue(attendees) {
+  if (!Array.isArray(attendees)) return "";
+  return attendees.join(", ");
+}
+
+function attendeesFromInputValue(value) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function EmailDraftReview({ draft, onChange }) {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label
+          htmlFor="email-draft-to"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          To
+        </label>
+        <input
+          id="email-draft-to"
+          value={draft.to}
+          onChange={(event) => onChange({ ...draft, to: event.target.value })}
+          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="email-draft-subject"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          Subject
+        </label>
+        <input
+          id="email-draft-subject"
+          value={draft.subject}
+          onChange={(event) =>
+            onChange({ ...draft, subject: event.target.value })
+          }
+          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="email-draft-body"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          Message
+        </label>
+        <textarea
+          id="email-draft-body"
+          value={draft.body}
+          onChange={(event) =>
+            onChange({ ...draft, body: event.target.value })
+          }
+          rows={7}
+          className="mt-2 min-h-36 w-full resize-y rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function CalendarDraftReview({ draft, onChange }) {
+  const updateField = (field, value) => {
+    onChange({ ...draft, [field]: value });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label
+          htmlFor="calendar-draft-title"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          Title
+        </label>
+        <input
+          id="calendar-draft-title"
+          value={draft.summary ?? ""}
+          onChange={(event) => updateField("summary", event.target.value)}
+          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+      <div>
+        <label
+          htmlFor="calendar-draft-description"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          Description
+        </label>
+        <textarea
+          id="calendar-draft-description"
+          value={draft.description ?? ""}
+          onChange={(event) => updateField("description", event.target.value)}
+          rows={4}
+          className="mt-2 min-h-28 w-full resize-y rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="calendar-draft-start"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+          >
+            Start
+          </label>
+          <input
+            id="calendar-draft-start"
+            type="datetime-local"
+            value={toDateTimeLocalValue(draft.start)}
+            onChange={(event) =>
+              updateField("start", toIsoDateTime(event.target.value))
+            }
+            className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+          />
+        </div>
+        <div>
+          <label
+            htmlFor="calendar-draft-end"
+            className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+          >
+            End
+          </label>
+          <input
+            id="calendar-draft-end"
+            type="datetime-local"
+            value={toDateTimeLocalValue(draft.end)}
+            onChange={(event) =>
+              updateField("end", toIsoDateTime(event.target.value))
+            }
+            className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
+          />
+        </div>
+      </div>
+      <div>
+        <label
+          htmlFor="calendar-draft-attendees"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
+        >
+          Attendees
+        </label>
+        <input
+          id="calendar-draft-attendees"
+          value={attendeesToInputValue(draft.attendees)}
+          onChange={(event) =>
+            updateField("attendees", attendeesFromInputValue(event.target.value))
+          }
+          placeholder="name@example.com, teammate@example.com"
+          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)] focus:border-[var(--color-app-accent)]"
+        />
+      </div>
+    </div>
+  );
+}
+
+function CalendarActionReview({ action }) {
+  if (action.kind === "calendar_delete") {
+    return (
+      <p className="break-words text-sm leading-6 text-[var(--color-app-text-muted)]">
+        Delete {action.summary ? `“${action.summary}”` : "the selected event"}?
+        This cannot be undone from Relay.
+      </p>
+    );
+  }
+
+  const fields = [
+    ["Title", action.summary],
+    ["Start", action.start],
+    ["End", action.end],
+    ["Attendees", action.attendees?.join(", ")],
+  ].filter(([, value]) => value);
+
+  return (
+    <dl className="space-y-2 text-sm">
+      {fields.map(([label, value]) => (
+        <div
+          key={label}
+          className="flex flex-col gap-1 sm:flex-row sm:gap-3"
+        >
+          <dt className="shrink-0 text-[var(--color-app-text-soft)] sm:w-20">
+            {label}
+          </dt>
+          <dd className="min-w-0 break-words text-[var(--color-app-text)]">
+            {value}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
 function AssistantMessageContent({ content, loading }) {
   if (!content) {
     return loading ? "…" : " ";
@@ -110,6 +349,10 @@ export default function AiChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [pendingAction, setPendingAction] = useState(null);
+  const [actionError, setActionError] = useState("");
+  const [actionStatus, setActionStatus] = useState("");
+  const [actionSending, setActionSending] = useState(false);
   const scrollRef = useRef(null);
   const searchParams = useSearchParams();
   const autoSentRef = useRef(false);
@@ -119,7 +362,7 @@ export default function AiChatPage() {
     if (node) {
       node.scrollTop = node.scrollHeight;
     }
-  }, [messages, loading]);
+  }, [messages, loading, pendingAction]);
 
   async function sendMessage(text) {
     const trimmed = text.trim();
@@ -131,6 +374,7 @@ export default function AiChatPage() {
     setMessages([...nextMessages, { role: "assistant", content: "" }]);
     setInput("");
     setError("");
+    setActionStatus("");
     setLoading(true);
 
     try {
@@ -191,6 +435,11 @@ export default function AiChatPage() {
               return copy;
             });
           }
+
+          if (event.type === "action_draft") {
+            setPendingAction(event.action);
+            setActionError("");
+          }
         });
       }
     } catch (err) {
@@ -206,6 +455,65 @@ export default function AiChatPage() {
     await sendMessage(input);
   }
 
+  async function confirmPendingAction() {
+    if (!pendingAction || actionSending) return;
+
+    setActionSending(true);
+    setActionError("");
+
+    try {
+      let response;
+      if (pendingAction.kind === "email") {
+        response = await fetch("/api/gmail", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            to: pendingAction.to,
+            subject: pendingAction.subject,
+            body: pendingAction.body,
+          }),
+        });
+      } else if (pendingAction.kind === "calendar_create") {
+        response = await fetch("/api/calendar", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(pendingAction),
+        });
+      } else if (pendingAction.kind === "calendar_update") {
+        const { eventId, kind, ...changes } = pendingAction;
+        response = await fetch(`/api/calendar/${eventId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(changes),
+        });
+      } else {
+        response = await fetch(`/api/calendar/${pendingAction.eventId}`, {
+          method: "DELETE",
+        });
+      }
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error ?? "Could not complete this action.");
+      }
+
+      const status = actionSuccessMessage(pendingAction);
+      setActionStatus(status);
+      setMessages((current) => [
+        ...current,
+        { role: "assistant", content: status },
+      ]);
+      setPendingAction(null);
+    } catch (err) {
+      console.error(err);
+      setActionError(
+        err instanceof Error ? err.message : "Could not complete this action.",
+      );
+    } finally {
+      setActionSending(false);
+    }
+  }
+
   // If we arrived here from the dashboard's "Ask your agent" card
   // (e.g. /ai-chat?prompt=Summarize+my+unread+emails), auto-send it once.
   useEffect(() => {
@@ -218,8 +526,8 @@ export default function AiChatPage() {
   }, [searchParams]);
 
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col space-y-6">
-      <section className="home-panel home-panel-strong rounded-[32px] p-6 sm:p-8 lg:p-10">
+    <div className="mx-auto flex w-full max-w-[1320px] flex-col space-y-6 px-4 sm:px-6 lg:px-8">
+      <section className="home-panel home-panel-strong rounded-[32px] p-5 sm:p-8 lg:p-10">
         <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
           Relay Agent
         </p>
@@ -233,7 +541,7 @@ export default function AiChatPage() {
             </p>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[420px]">
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 xl:min-w-[420px]">
             {[
               "Summarize unread mail",
               "Draft a reply",
@@ -250,11 +558,11 @@ export default function AiChatPage() {
         </div>
       </section>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_280px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
         <div className="flex min-h-[min(72vh,820px)] flex-col">
           <div
             ref={scrollRef}
-            className="home-panel mb-4 flex-1 space-y-4 overflow-y-auto rounded-[28px] p-5"
+            className="home-panel mb-4 flex-1 space-y-4 overflow-y-auto rounded-[28px] p-4 sm:p-5"
           >
             {messages.map((message, index) => (
               <div
@@ -264,7 +572,7 @@ export default function AiChatPage() {
                 }`}
               >
                 <div
-                  className={`max-w-[80%] rounded-[18px] px-4 py-3 text-sm leading-6 ${
+                  className={`max-w-[92%] rounded-[18px] px-4 py-3 text-sm leading-6 sm:max-w-[80%] ${
                     message.role === "user"
                       ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
                       : "border border-[var(--color-app-border)] bg-[var(--color-app-surface)] text-[var(--color-app-text)]"
@@ -289,7 +597,74 @@ export default function AiChatPage() {
             </div>
           ) : null}
 
-          <form onSubmit={handleSubmit} className="flex gap-3">
+          {pendingAction ? (
+            <section
+              aria-labelledby="review-action-title"
+              className="mb-4 rounded-[22px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-chip)] p-4 sm:p-5"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
+                Approval required
+              </p>
+              <h3
+                id="review-action-title"
+                className="mt-2 text-lg font-medium text-[var(--color-app-text)]"
+              >
+                {actionTitle(pendingAction)}
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--color-app-text-muted)]">
+                Review the details below. Nothing happens until you confirm.
+              </p>
+              <div className="mt-5">
+                {pendingAction.kind === "email" ? (
+                  <EmailDraftReview
+                    draft={pendingAction}
+                    onChange={setPendingAction}
+                  />
+                ) : pendingAction.kind === "calendar_delete" ? (
+                  <CalendarActionReview action={pendingAction} />
+                ) : (
+                  <CalendarDraftReview
+                    draft={pendingAction}
+                    onChange={setPendingAction}
+                  />
+                )}
+              </div>
+              {actionError ? (
+                <p className="mt-4 text-sm text-[var(--color-error)]">
+                  {actionError}
+                </p>
+              ) : null}
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={confirmPendingAction}
+                  disabled={actionSending}
+                  className="w-full rounded-[14px] bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  {actionSending ? "Working..." : confirmButtonLabel(pendingAction)}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPendingAction(null);
+                    setActionError("");
+                  }}
+                  disabled={actionSending}
+                  className="w-full rounded-[14px] border border-[var(--color-app-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                >
+                  Discard
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {actionStatus ? (
+            <p className="mb-4 text-sm text-[var(--color-success)]">
+              {actionStatus}
+            </p>
+          ) : null}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
             <textarea
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -300,7 +675,7 @@ export default function AiChatPage() {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-12 rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               {loading ? "Sending..." : "Send"}
             </button>
@@ -313,11 +688,11 @@ export default function AiChatPage() {
               Try this
             </p>
             <div className="mt-4 space-y-2">
-            {[
-              "Summarize my last 5 emails",
-              "Draft a reply to the latest thread",
-              "Move tomorrow's review to Thursday",
-            ].map((item) => (
+              {[
+                "Summarize my last 5 emails",
+                "Draft a reply to the latest thread",
+                "Move tomorrow's review to Thursday",
+              ].map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -331,7 +706,7 @@ export default function AiChatPage() {
           </div>
 
           <div className="home-panel rounded-[28px] p-5 text-sm leading-7 text-[var(--color-app-text-muted)]">
-            The agent can use your connected Gmail and Google Calendar accounts directly. It won&apos;t ask for credentials in chat.
+            The agent can read your connected Gmail and Google Calendar data. It always asks for approval before it sends, creates, changes, or deletes anything, and calendar drafts stay editable until you confirm them.
           </div>
         </aside>
       </div>

@@ -28,7 +28,7 @@ export default async function DashboardPage() {
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[420px]">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3 xl:min-w-[420px]">
               {[
                 { label: "Inbox", value: "Live", body: "Recent mail and thread context" },
                 { label: "Calendar", value: "Ready", body: "Upcoming events and changes" },

@@ -1,13 +1,29 @@
-// POST /api/gmail/refresh — trigger a Gmail sync then read from local DB
-//
-// Corsair automatically syncs message data (body, subject, from, to, etc.)
-// into corsair_entities whenever an API call or webhook flows through it.
-// Reading from tenant.gmail.db.messages.search() hits your local DB —
-// zero extra API calls, no rate limits, body already included.
+// POST /api/gmail/refresh — populate the local Gmail cache on demand.
 
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
+
+const MAX_SYNCED_MESSAGES = 20;
+const HYDRATION_CONCURRENCY = 5;
+
+async function hydrateMessages(tenant, messageIds) {
+  let nextIndex = 0;
+
+  async function worker() {
+    while (nextIndex < messageIds.length) {
+      const id = messageIds[nextIndex++];
+      await tenant.gmail.api.messages.get({ id });
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(HYDRATION_CONCURRENCY, messageIds.length) },
+      worker,
+    ),
+  );
+}
 
 export async function POST(request) {
   const userId = await getAuthUserId();
@@ -18,16 +34,32 @@ export async function POST(request) {
   try {
     const tenant = corsair.withTenant(userId);
 
-    // Trigger a live fetch so Corsair syncs the latest messages into the DB.
-    // This single API call updates corsair_entities for every returned message.
-    await tenant.gmail.api.messages.list({});
+    // Gmail's list endpoint only returns IDs. Fetching each returned ID once
+    // stores the subject, sender, snippet, and body in Corsair's local cache.
+    //
+    // We intentionally do not restrict this to the INBOX label because some
+    // connected accounts may have mail archived or categorized elsewhere.
+    // The inbox page is cache-driven, so we want the refresh step to populate
+    // a useful recent-mail slice even when INBOX is empty.
+    const list = await tenant.gmail.api.messages.list({
+      maxResults: MAX_SYNCED_MESSAGES,
+    });
+    const messageIds = (list.messages ?? [])
+      .map((message) => message.id)
+      .filter(Boolean);
 
-    // Read all synced messages from local DB — body, subject, from, to are
-    // already populated by Corsair. No per-message API call needed.
-    const rows = await tenant.gmail.db.messages.search({ limit: 50 });
+    await hydrateMessages(tenant, messageIds);
 
-    // Each row: { id, entity_id, entity_type, data: { id, threadId, snippet, body, subject, from, to, ... } }
-    const messages = rows.map((row) => row.data);
+    const rows = await tenant.gmail.db.messages.search({
+      limit: MAX_SYNCED_MESSAGES,
+    });
+    const messages = [];
+    for (const row of rows) {
+      const message = row.data;
+      if (message.payload || message.subject || message.snippet) {
+        messages.push(message);
+      }
+    }
 
     return NextResponse.json({
       success: true,
