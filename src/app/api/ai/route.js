@@ -10,6 +10,7 @@ import { Agent, run, tool } from "@openai/agents";
 import { z } from "zod";
 import { corsair } from "@/server/corsair.js";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
+import { readHydratedGmailMessages } from "@/server/services/gmailService.js";
 
 function normalizeHistory(history) {
   // Convert the client chat transcript into the exact input shape expected
@@ -75,21 +76,18 @@ function isGoogleGrantError(error) {
   );
 }
 
-function toCachedMessages(rows, limit) {
+function toCachedMessages(cachedMessages, limit) {
   // Reduce the cached Gmail rows to the small subset of fields the UI and
   // agent need, instead of exposing the full provider payload.
   const messages = [];
-  for (const row of rows) {
-    const message = row.data;
-    if (message.payload || message.subject || message.snippet) {
-      messages.push({
-        id: message.id,
-        from: message.from ?? "",
-        subject: message.subject ?? "(no subject)",
-        snippet: message.snippet ?? "",
-        date: message.internalDate ?? "",
-      });
-    }
+  for (const message of cachedMessages) {
+    messages.push({
+      id: message.id,
+      from: message.from ?? "",
+      subject: message.subject ?? "(no subject)",
+      snippet: message.snippet ?? "",
+      date: message.internalDate ?? "",
+    });
     if (messages.length === limit) break;
   }
   return messages;
@@ -205,8 +203,8 @@ export async function POST(request) {
           }),
           strict: true,
           async execute({ limit }) {
-            const rows = await tenant.gmail.db.messages.search({ limit: 50 });
-            return JSON.stringify(toCachedMessages(rows, limit));
+            const messages = await readHydratedGmailMessages(tenant, limit);
+            return JSON.stringify(toCachedMessages(messages, limit));
           },
         });
         const listCachedCalendarTool = tool({

@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
+import { readHydratedGmailMessagesById } from "@/server/services/gmailService.js";
 
 const MAX_SYNCED_MESSAGES = 20;
 const HYDRATION_CONCURRENCY = 5;
@@ -13,7 +14,9 @@ async function hydrateMessages(tenant, messageIds) {
   async function worker() {
     while (nextIndex < messageIds.length) {
       const id = messageIds[nextIndex++];
-      await tenant.gmail.api.messages.get({ id });
+      // Explicit `full` avoids Gmail's id-only/minimal response and makes
+      // Corsair write the payload, subject, sender, and snippet to row.data.
+      await tenant.gmail.api.messages.get({ id, format: "full" });
     }
   }
 
@@ -34,32 +37,22 @@ export async function POST(request) {
   try {
     const tenant = corsair.withTenant(userId);
 
-    // Gmail's list endpoint only returns IDs. Fetching each returned ID once
-    // stores the subject, sender, snippet, and body in Corsair's local cache.
-    //
-    // We intentionally do not restrict this to the INBOX label because some
-    // connected accounts may have mail archived or categorized elsewhere.
-    // The inbox page is cache-driven, so we want the refresh step to populate
-    // a useful recent-mail slice even when INBOX is empty.
+    // messages.list only saves id/threadId reference rows. Fetch every listed
+    // ID in full, then read those exact hydrated entities back from Corsair's
+    // database. A broad search({ limit }) can otherwise select old reference
+    // rows in an unspecified database order.
     const list = await tenant.gmail.api.messages.list({
       maxResults: MAX_SYNCED_MESSAGES,
+      labelIds: ["INBOX"],
     });
+
     const messageIds = (list.messages ?? [])
       .map((message) => message.id)
       .filter(Boolean);
 
     await hydrateMessages(tenant, messageIds);
 
-    const rows = await tenant.gmail.db.messages.search({
-      limit: MAX_SYNCED_MESSAGES,
-    });
-    const messages = [];
-    for (const row of rows) {
-      const message = row.data;
-      if (message.payload || message.subject || message.snippet) {
-        messages.push(message);
-      }
-    }
+    const messages = await readHydratedGmailMessagesById(tenant, messageIds);
 
     return NextResponse.json({
       success: true,

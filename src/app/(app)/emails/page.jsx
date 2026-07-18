@@ -19,32 +19,67 @@ function formatSender(from) {
   return "";
 }
 
+function formatMessageDate(internalDate) {
+  if (!internalDate) return "";
+
+  const date = new Date(Number(internalDate));
+  return Number.isNaN(date.getTime())
+    ? ""
+    : new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }).format(date);
+}
+
 export default function EmailsPage() {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    async function loadEmails() {
-      try {
-        const res = await fetch("/api/gmail");
-        const data = await res.json();
+  // Reads from the local cache — fast, no Google API call
+  async function loadEmails() {
+    try {
+      const res = await fetch("/api/gmail");
+      const data = await res.json();
 
-        if (!res.ok) {
-          console.error("Emails page error response:", data);
-          setError(EMAILS_ERROR);
-          return;
-        }
-
-        setMessages(data.messages ?? []);
-      } catch (err) {
-        console.error(err);
+      if (!res.ok) {
+        console.error("Emails page error response:", data);
         setError(EMAILS_ERROR);
-      } finally {
-        setLoading(false);
+        return;
       }
-    }
 
+      setMessages(data.messages ?? []);
+    } catch (err) {
+      console.error(err);
+      setError(EMAILS_ERROR);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Calls Google to fetch fresh emails, stores them in cache, then shows them
+  async function handleRefresh() {
+    setRefreshing(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/gmail/refresh", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? EMAILS_ERROR);
+        return;
+      }
+      setMessages(data.messages ?? []);
+    } catch (err) {
+      console.error(err);
+      setError(EMAILS_ERROR);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+
+  useEffect(() => {
     loadEmails();
   }, []);
 
@@ -64,12 +99,23 @@ export default function EmailsPage() {
             </p>
           </div>
 
-          <Link
-            href="/dashboard"
-            className="inline-flex w-full items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:w-auto"
-          >
-            Back to brief
-          </Link>
+          <div className="flex w-full items-center gap-3 sm:w-auto">
+            {/* Refresh — fetches from Google and populates the cache */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="inline-flex flex-1 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+            >
+              {refreshing ? "Refreshing…" : "Refresh"}
+            </button>
+
+            <Link
+              href="/dashboard"
+              className="inline-flex flex-1 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:flex-none"
+            >
+              Back to brief
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -90,8 +136,13 @@ export default function EmailsPage() {
           No emails are in the local cache yet. That usually means Gmail has
           not been provisioned or refreshed for this account.
           <div className="mt-2">
-            Connect Gmail, then refresh from the Brief page to populate the
-            inbox.
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="underline underline-offset-2 hover:text-[var(--color-app-text)] disabled:opacity-50"
+            >
+              {refreshing ? "Refreshing…" : "Click here to load your inbox."}
+            </button>
           </div>
         </div>
       ) : null}
@@ -114,9 +165,9 @@ export default function EmailsPage() {
                   {message.snippet ?? ""}
                 </p>
               </div>
-              {message.date ? (
+              {formatMessageDate(message.internalDate) ? (
                 <span className="shrink-0 text-xs text-[var(--color-app-text-soft)] sm:text-right">
-                  {message.date}
+                  {formatMessageDate(message.internalDate)}
                 </span>
               ) : null}
             </div>
