@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 function parseSseChunk(buffer, onEvent) {
   const parts = buffer.split("\n\n");
@@ -32,6 +33,7 @@ function parseSseChunk(buffer, onEvent) {
 
 const CHAT_REQUEST_ERROR = "Could not start the chat right now.";
 const CHAT_STREAM_ERROR = "I hit an error while responding. Please try again.";
+const INITIAL_MESSAGES = [];
 
 function actionTitle(action) {
   if (action.kind === "email") return "Review email draft";
@@ -339,13 +341,7 @@ function AssistantMessageContent({ content, loading }) {
 }
 
 export default function AiChatPage() {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content:
-        "Ask me to draft replies, summarize Gmail, or create calendar events.",
-    },
-  ]);
+  const [messages, setMessages] = useState(INITIAL_MESSAGES);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -356,6 +352,13 @@ export default function AiChatPage() {
   const scrollRef = useRef(null);
   const searchParams = useSearchParams();
   const autoSentRef = useRef(false);
+
+  useEffect(() => {
+    document.body.classList.add("ai-chat-immersive");
+    return () => {
+      document.body.classList.remove("ai-chat-immersive");
+    };
+  }, []);
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -525,191 +528,226 @@ export default function AiChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  const starterPrompts = [
+    "Summarize my last 5 emails",
+    "Draft a reply to the latest thread",
+    "Move tomorrow's review to Thursday",
+  ];
+
   return (
-    <div className="mx-auto flex w-full max-w-[1320px] flex-col space-y-6 px-4 sm:px-6 lg:px-8">
-      <section className="home-panel home-panel-strong rounded-[32px] p-5 sm:p-8 lg:p-10">
-        <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
-          Relay Agent
-        </p>
-        <div className="mt-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <h2 className="text-balance font-[family:var(--font-inter)] text-[clamp(1.8rem,3.8vw,3rem)] font-normal leading-tight tracking-tight text-[var(--color-app-text)]">
-              Ask the agent to work your inbox and calendar from one surface.
-            </h2>
-            <p className="mt-3 max-w-2xl text-[15px] leading-7 text-[var(--color-app-text-muted)]">
-              Draft replies, summarize messages, or move meetings without switching context.
-            </p>
-          </div>
+    <>
+      <style jsx global>{`
+        body.ai-chat-immersive .app-topbar-shell,
+        body.ai-chat-immersive .mobile-app-nav {
+          display: none !important;
+        }
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 xl:min-w-[420px]">
-            {[
-              "Summarize unread mail",
-              "Draft a reply",
-              "Reschedule a meeting",
-            ].map((item) => (
-              <div
-                key={item}
-                className="rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-sm text-[var(--color-app-text-muted)]"
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+        body.ai-chat-immersive .app-page > div,
+        body.ai-chat-immersive .app-page main {
+          padding: 0 !important;
+        }
+      `}</style>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_280px]">
-        <div className="flex min-h-[min(72vh,820px)] flex-col">
-          <div
-            ref={scrollRef}
-            className="home-panel mb-4 flex-1 space-y-4 overflow-y-auto rounded-[28px] p-4 sm:p-5"
-          >
-            {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={`flex ${
-                  message.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[92%] rounded-[18px] px-4 py-3 text-sm leading-6 sm:max-w-[80%] ${
-                    message.role === "user"
-                      ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
-                      : "border border-[var(--color-app-border)] bg-[var(--color-app-surface)] text-[var(--color-app-text)]"
-                  } ${message.role === "assistant" ? "ai-assistant-bubble" : "whitespace-pre-wrap"}`}
-                >
-                  {message.role === "assistant" ? (
-                    <AssistantMessageContent
-                      content={message.content}
-                      loading={loading}
+      <div className="fixed inset-0 z-[60] overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-app-text)] lg:left-[var(--sidebar-width)]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,184,0,0.14),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
+
+        <div className="relative flex h-full w-full gap-4 p-4 sm:p-5 lg:p-6">
+          <section className="home-panel home-panel-strong relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px]">
+            <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-6">
+              <div className="flex items-center gap-3">
+                <span className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)]">
+                  <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
+                    <rect
+                      x="4"
+                      y="4"
+                      width="16"
+                      height="16"
+                      rx="4"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
                     />
-                  ) : (
-                    message.content
-                  )}
+                    <path
+                      d="M9 4v16M15 4v16"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+                <h1 className="font-[family:var(--font-inter)] text-[18px] font-semibold tracking-[-0.03em] text-[var(--color-app-text)]">
+                  Chat
+                </h1>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-app-text-muted)]">
+                <ThemeToggle />
+              </div>
+            </div>
+
+            <div className="relative flex min-h-0 flex-1 flex-col px-4 pb-4 sm:px-6 sm:pb-6">
+              <div className="pointer-events-none absolute right-8 top-6 h-28 w-28 rounded-[38%] bg-[var(--color-app-accent)] opacity-45 blur-2xl" />
+              <div className="pointer-events-none absolute bottom-6 left-8 h-24 w-24 rounded-full bg-[rgba(34,197,94,0.24)] blur-2xl" />
+
+              <div className="flex min-h-0 flex-1 flex-col">
+                <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-start px-3 pb-2 pt-0 text-center">
+                  <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(2.5rem,3vw,4.75rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
+                    Ask the agent to work your inbox and calendar from one place.
+                  </h2>
+                  <div className="mt-5 flex flex-wrap justify-center gap-3">
+                    {starterPrompts.map((item) => (
+                      <button
+                        key={item}
+                        type="button"
+                        onClick={() => setInput(item)}
+                        className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-5 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
+                      >
+                        {item}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
+                  <div
+                    ref={scrollRef}
+                    className="max-h-[min(48vh,440px)] space-y-5 overflow-y-auto pr-1"
+                  >
+                    {messages.map((message, index) => (
+                      <div
+                        key={`${message.role}-${index}`}
+                        className={`flex ${
+                          message.role === "user" ? "justify-end" : "justify-start"
+                        }`}
+                      >
+                        <div
+                          className={`max-w-[92%] rounded-[20px] px-4 py-3 text-sm leading-7 sm:max-w-[80%] ${
+                            message.role === "user"
+                              ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
+                              : "border border-[var(--color-app-border)] bg-[var(--color-app-surface)] text-[var(--color-app-text)]"
+                          } ${message.role === "assistant" ? "ai-assistant-bubble" : "whitespace-pre-wrap"}`}
+                        >
+                          {message.role === "assistant" ? (
+                            <AssistantMessageContent
+                              content={message.content}
+                              loading={loading}
+                            />
+                          ) : (
+                            message.content
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {error ? (
+                    <div className="rounded-[20px] border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-4 py-3 text-sm text-[var(--color-error)]">
+                      {error}
+                    </div>
+                  ) : null}
+
+                  {pendingAction ? (
+                    <section
+                      aria-labelledby="review-action-title"
+                      className="rounded-[26px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-chip)] p-4 sm:p-5"
+                    >
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
+                        Approval required
+                      </p>
+                      <h3
+                        id="review-action-title"
+                        className="mt-2 text-lg font-medium text-[var(--color-app-text)]"
+                      >
+                        {actionTitle(pendingAction)}
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-[var(--color-app-text-muted)]">
+                        Review the details below. Nothing happens until you confirm.
+                      </p>
+                      <div className="mt-5">
+                        {pendingAction.kind === "email" ? (
+                          <EmailDraftReview
+                            draft={pendingAction}
+                            onChange={setPendingAction}
+                          />
+                        ) : pendingAction.kind === "calendar_delete" ? (
+                          <CalendarActionReview action={pendingAction} />
+                        ) : (
+                          <CalendarDraftReview
+                            draft={pendingAction}
+                            onChange={setPendingAction}
+                          />
+                        )}
+                      </div>
+                      {actionError ? (
+                        <p className="mt-4 text-sm text-[var(--color-error)]">
+                          {actionError}
+                        </p>
+                      ) : null}
+                      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+                        <button
+                          type="button"
+                          onClick={confirmPendingAction}
+                          disabled={actionSending}
+                          className="w-full rounded-[16px] bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                          {actionSending ? "Working..." : confirmButtonLabel(pendingAction)}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPendingAction(null);
+                            setActionError("");
+                          }}
+                          disabled={actionSending}
+                          className="w-full rounded-[16px] border border-[var(--color-app-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
+                        >
+                          Discard
+                        </button>
+                      </div>
+                    </section>
+                  ) : null}
+
+                  {actionStatus ? (
+                    <div className="rounded-[20px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-sm text-[var(--color-success)]">
+                      {actionStatus}
+                    </div>
+                  ) : null}
+
+                  <div className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] p-1.5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
+                    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                      <textarea
+                        value={input}
+                        onChange={(event) => setInput(event.target.value)}
+                        onKeyDown={async (event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            await handleSubmit(event);
+                          }
+                        }}
+                        placeholder="Ask the agent to check Gmail, send a reply, or create a calendar event..."
+                        className="min-h-12 flex-1 resize-none rounded-full border-0 bg-transparent px-4 py-[5px] text-sm leading-5 text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)]"
+                        rows={2}
+                      />
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                        aria-label="Send message"
+                      >
+                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                          <path
+                            d="m5 12 13-7-4 7 4 7-13-7Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </button>
+                    </form>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-
-          {error ? (
-            <div className="mb-4 rounded-[18px] border border-[rgba(239,68,68,0.3)] bg-[rgba(239,68,68,0.08)] px-4 py-3 text-sm text-[var(--color-error)]">
-              {error}
             </div>
-          ) : null}
-
-          {pendingAction ? (
-            <section
-              aria-labelledby="review-action-title"
-              className="mb-4 rounded-[22px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-chip)] p-4 sm:p-5"
-            >
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
-                Approval required
-              </p>
-              <h3
-                id="review-action-title"
-                className="mt-2 text-lg font-medium text-[var(--color-app-text)]"
-              >
-                {actionTitle(pendingAction)}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-[var(--color-app-text-muted)]">
-                Review the details below. Nothing happens until you confirm.
-              </p>
-              <div className="mt-5">
-                {pendingAction.kind === "email" ? (
-                  <EmailDraftReview
-                    draft={pendingAction}
-                    onChange={setPendingAction}
-                  />
-                ) : pendingAction.kind === "calendar_delete" ? (
-                  <CalendarActionReview action={pendingAction} />
-                ) : (
-                  <CalendarDraftReview
-                    draft={pendingAction}
-                    onChange={setPendingAction}
-                  />
-                )}
-              </div>
-              {actionError ? (
-                <p className="mt-4 text-sm text-[var(--color-error)]">
-                  {actionError}
-                </p>
-              ) : null}
-              <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={confirmPendingAction}
-                  disabled={actionSending}
-                  className="w-full rounded-[14px] bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                >
-                  {actionSending ? "Working..." : confirmButtonLabel(pendingAction)}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPendingAction(null);
-                    setActionError("");
-                  }}
-                  disabled={actionSending}
-                  className="w-full rounded-[14px] border border-[var(--color-app-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                >
-                  Discard
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          {actionStatus ? (
-            <p className="mb-4 text-sm text-[var(--color-success)]">
-              {actionStatus}
-            </p>
-          ) : null}
-
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
-            <textarea
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              placeholder="Ask the agent to check Gmail, send a reply, or create a calendar event..."
-              className="min-h-14 flex-1 resize-none rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-sm text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)] focus:border-[var(--color-app-accent)]"
-              rows={2}
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="min-h-12 rounded-[18px] bg-[var(--color-app-accent)] px-5 py-3 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-            >
-              {loading ? "Sending..." : "Send"}
-            </button>
-          </form>
+          </section>
         </div>
-
-        <aside className="space-y-4">
-          <div className="home-panel rounded-[28px] p-5">
-            <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
-              Try this
-            </p>
-            <div className="mt-4 space-y-2">
-              {[
-                "Summarize my last 5 emails",
-                "Draft a reply to the latest thread",
-                "Move tomorrow's review to Thursday",
-              ].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  onClick={() => setInput(item)}
-                  className="w-full rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-left text-sm text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="home-panel rounded-[28px] p-5 text-sm leading-7 text-[var(--color-app-text-muted)]">
-            The agent can read your connected Gmail and Google Calendar data. It always asks for approval before it sends, creates, changes, or deletes anything, and calendar drafts stay editable until you confirm them.
-          </div>
-        </aside>
       </div>
-    </div>
+    </>
   );
 }
