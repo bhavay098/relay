@@ -8,6 +8,31 @@ import { UserButton } from "@clerk/nextjs";
 // and an inline SVG icon (no icon library needed).
 const navItems = [
   {
+    label: "Agent",
+    href: "/ai-chat",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px]">
+        <rect
+          x="4"
+          y="8"
+          width="16"
+          height="11"
+          rx="3"
+          stroke="currentColor"
+          strokeWidth="1.6"
+        />
+        <path
+          d="M12 8V5m-3 0h6"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        <circle cx="9" cy="13.5" r="1.2" fill="currentColor" />
+        <circle cx="15" cy="13.5" r="1.2" fill="currentColor" />
+      </svg>
+    ),
+  },
+  {
     label: "Brief",
     href: "/dashboard",
     icon: (
@@ -57,31 +82,6 @@ const navItems = [
           strokeWidth="1.6"
           strokeLinecap="round"
         />
-      </svg>
-    ),
-  },
-  {
-    label: "Agent",
-    href: "/ai-chat",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" className="h-[18px] w-[18px]">
-        <rect
-          x="4"
-          y="8"
-          width="16"
-          height="11"
-          rx="3"
-          stroke="currentColor"
-          strokeWidth="1.6"
-        />
-        <path
-          d="M12 8V5m-3 0h6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <circle cx="9" cy="13.5" r="1.2" fill="currentColor" />
-        <circle cx="15" cy="13.5" r="1.2" fill="currentColor" />
       </svg>
     ),
   },

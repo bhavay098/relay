@@ -7,10 +7,34 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
 
-function normalizeDateTimeField(value) {
+const DEFAULT_TIME_ZONE = "UTC";
+
+function normalizeTimeZone(value) {
+  if (typeof value !== "string" || !value.trim()) return DEFAULT_TIME_ZONE;
+
+  const timeZone = value.trim();
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone });
+    return timeZone;
+  } catch {
+    return DEFAULT_TIME_ZONE;
+  }
+}
+
+function normalizeDateTimeField(value, timeZone) {
   if (!value) return undefined;
-  if (typeof value === "string") return { dateTime: value };
-  if (typeof value === "object") return value;
+  const field =
+    typeof value === "string"
+      ? { dateTime: value }
+      : typeof value === "object"
+        ? { ...value }
+        : undefined;
+
+  if (field?.dateTime && !field.timeZone) {
+    field.timeZone = timeZone;
+  }
+
+  if (field) return field;
   return undefined;
 }
 
@@ -22,7 +46,7 @@ function normalizeAttendees(attendees) {
 }
 
 // PUT /api/calendar/[id] — update a calendar event
-// Body: { summary, description, start, end, attendees }
+// Body: { summary, description, start, end, attendees, timeZone }
 // Any field can be omitted to leave unchanged
 
 export async function PUT(request, { params }) {
@@ -39,7 +63,7 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { summary, description, start, end, attendees } = body;
+  const { summary, description, start, end, attendees, timeZone } = body;
 
   // At least one field must be provided to update
   if (!summary && !description && !start && !end && !attendees) {
@@ -54,12 +78,13 @@ export async function PUT(request, { params }) {
 
   try {
     const tenant = corsair.withTenant(userId);
+    const eventTimeZone = normalizeTimeZone(timeZone);
 
     const eventData = {};
     if (summary) eventData.summary = summary;
     if (description) eventData.description = description;
-    if (start) eventData.start = normalizeDateTimeField(start);
-    if (end) eventData.end = normalizeDateTimeField(end);
+    if (start) eventData.start = normalizeDateTimeField(start, eventTimeZone);
+    if (end) eventData.end = normalizeDateTimeField(end, eventTimeZone);
     if (attendees) eventData.attendees = normalizeAttendees(attendees);
 
     const event = await tenant.googlecalendar.api.events.update({

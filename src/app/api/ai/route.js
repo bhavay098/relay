@@ -11,6 +11,7 @@ import { z } from "zod";
 import { corsair } from "@/server/corsair.js";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { readHydratedGmailMessages } from "@/server/services/gmailService.js";
+import { saveMessage } from "@/server/services/chatService.js";
 
 function normalizeHistory(history) {
   // Convert the client chat transcript into the exact input shape expected
@@ -138,11 +139,31 @@ export async function POST(request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { message } = body;
+  const { message, conversationId } = body;
 
   // The endpoint expects a single chat message to seed the agent run.
   if (!message) {
     return NextResponse.json({ error: "Missing message" }, { status: 400 });
+  }
+
+  if (!conversationId) {
+    return NextResponse.json(
+      { error: "Missing conversationId" },
+      { status: 400 },
+    );
+  }
+
+  // Persist the user's message right away, before the agent even runs, so
+  // it's saved even if the model call fails or the connection drops
+  // partway through streaming.
+  try {
+    await saveMessage(userId, conversationId, "user", message);
+  } catch (error) {
+    console.error("Save user message error:", error);
+    return NextResponse.json(
+      { error: "Conversation not found" },
+      { status: 404 },
+    );
   }
 
   const history = normalizeHistory(body.history);
@@ -164,6 +185,12 @@ export async function POST(request) {
         );
       };
 
+      // Accumulates the assistant's full reply as text deltas stream in, so
+      // the complete message can be saved to the conversation once the
+      // stream ends — the same text the user sees rendered, not a second
+      // separate call to the model.
+      let assistantReply = "";
+
       try {
         // Scope all tool access to the current tenant/user.
         const tenant = corsair.withTenant(userId);
@@ -177,20 +204,18 @@ export async function POST(request) {
           connectionStatus.googlecalendar === "connected";
 
         if (wants.gmail && !gmailConnected) {
-          send({
-            type: "error",
-            content:
-              "Gmail is not connected for this account. Connect Gmail in the app, then try again.",
-          });
+          const content =
+            "Gmail is not connected for this account. Connect Gmail in the app, then try again.";
+          send({ type: "error", content });
+          await saveMessage(userId, conversationId, "assistant", content);
           return;
         }
 
         if (wants.googlecalendar && !calendarConnected) {
-          send({
-            type: "error",
-            content:
-              "Google Calendar is not connected for this account. Connect Google Calendar in the app, then try again.",
-          });
+          const content =
+            "Google Calendar is not connected for this account. Connect Google Calendar in the app, then try again.";
+          send({ type: "error", content });
+          await saveMessage(userId, conversationId, "assistant", content);
           return;
         }
 
@@ -353,6 +378,7 @@ export async function POST(request) {
               event.data?.type === "output_text_delta" &&
               typeof event.data.delta === "string"
             ) {
+              assistantReply += event.data.delta;
               send({ type: "text", content: event.data.delta });
             }
             continue;
@@ -402,21 +428,29 @@ export async function POST(request) {
 
         // Signal that the stream completed successfully.
         send({ type: "done" });
+
+        // Save whatever text the assistant produced. If the run only
+        // called tools (e.g. a prepare_* action draft with no narration),
+        // assistantReply may be empty — skip saving an empty row rather
+        // than cluttering the conversation with blank assistant turns.
+        if (assistantReply.trim()) {
+          await saveMessage(
+            userId,
+            conversationId,
+            "assistant",
+            assistantReply,
+          );
+        }
       } catch (error) {
         // Log server-side details, but keep the client payload safe.
         console.error("AI chat stream error:", error);
-        if (isGoogleGrantError(error)) {
-          send({
-            type: "error",
-            content:
-              "Google Calendar or Gmail access has expired or been revoked. Reconnect the account in the app, then try again.",
-          });
-          return;
-        }
-        send({
-          type: "error",
-          content: "I hit an error while responding. Please try again.",
-        });
+        const content = isGoogleGrantError(error)
+          ? "Google Calendar or Gmail access has expired or been revoked. Reconnect the account in the app, then try again."
+          : "I hit an error while responding. Please try again.";
+        send({ type: "error", content });
+        await saveMessage(userId, conversationId, "assistant", content).catch(
+          (saveError) => console.error("Save error message error:", saveError),
+        );
       } finally {
         // Close the stream in all cases so the client can finish cleanly.
         controller.close();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkBreaks from "remark-breaks";
 import remarkGfm from "remark-gfm";
@@ -63,11 +63,9 @@ function toDateTimeLocalValue(value) {
   if (Number.isNaN(date.getTime())) return value;
 
   const pad = (number) => String(number).padStart(2, "0");
-  return [
-    date.getFullYear(),
-    pad(date.getMonth() + 1),
-    pad(date.getDate()),
-  ].join("-").concat(`T${pad(date.getHours())}:${pad(date.getMinutes())}`);
+  return [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())]
+    .join("-")
+    .concat(`T${pad(date.getHours())}:${pad(date.getMinutes())}`);
 }
 
 function toIsoDateTime(value) {
@@ -134,9 +132,7 @@ function EmailDraftReview({ draft, onChange }) {
         <textarea
           id="email-draft-body"
           value={draft.body}
-          onChange={(event) =>
-            onChange({ ...draft, body: event.target.value })
-          }
+          onChange={(event) => onChange({ ...draft, body: event.target.value })}
           rows={7}
           className="mt-2 min-h-36 w-full resize-y rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
         />
@@ -228,7 +224,10 @@ function CalendarDraftReview({ draft, onChange }) {
           id="calendar-draft-attendees"
           value={attendeesToInputValue(draft.attendees)}
           onChange={(event) =>
-            updateField("attendees", attendeesFromInputValue(event.target.value))
+            updateField(
+              "attendees",
+              attendeesFromInputValue(event.target.value),
+            )
           }
           placeholder="name@example.com, teammate@example.com"
           className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)] focus:border-[var(--color-app-accent)]"
@@ -258,10 +257,7 @@ function CalendarActionReview({ action }) {
   return (
     <dl className="space-y-2 text-sm">
       {fields.map(([label, value]) => (
-        <div
-          key={label}
-          className="flex flex-col gap-1 sm:flex-row sm:gap-3"
-        >
+        <div key={label} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
           <dt className="shrink-0 text-[var(--color-app-text-soft)] sm:w-20">
             {label}
           </dt>
@@ -350,8 +346,163 @@ export default function AiChatPage() {
   const [actionStatus, setActionStatus] = useState("");
   const [actionSending, setActionSending] = useState(false);
   const scrollRef = useRef(null);
+  const conversationScrollRef = useRef(null);
+  const wasReviewVisibleRef = useRef(false);
   const searchParams = useSearchParams();
   const autoSentRef = useRef(false);
+
+  // Chat history / conversation management state
+  const [conversations, setConversations] = useState([]);
+  const [conversationsLoading, setConversationsLoading] = useState(true);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
+
+  // The server already returns conversations sorted newest-first, but we
+  // re-sort here too so the sidebar can never show a stale order — e.g. if
+  // an optimistic update (starting a new chat) and a background refetch
+  // land in a different order than they were kicked off. Always deriving
+  // the displayed order from updatedAt means there's nowhere for a race to
+  // hide.
+  const sortedConversations = useMemo(() => {
+    return [...conversations].sort(
+      (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt),
+    );
+  }, [conversations]);
+
+  // Loads the sidebar list. Reusable so it can be called again after
+  // creating, renaming, or deleting a conversation to stay in sync.
+  async function loadConversations() {
+    try {
+      const res = await fetch("/api/conversations");
+      const data = await res.json();
+      if (res.ok) {
+        setConversations(data.conversations ?? []);
+      }
+    } catch (err) {
+      console.error("Load conversations error:", err);
+    } finally {
+      setConversationsLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadConversations();
+  }, []);
+
+  // Loads one conversation's messages into the chat window. Used both when
+  // clicking a conversation in the sidebar and when starting fresh.
+  async function openConversation(conversationId) {
+    setActiveConversationId(conversationId);
+    setPendingAction(null);
+    setActionError("");
+    setActionStatus("");
+    setError("");
+
+    if (!conversationId) {
+      setMessages(INITIAL_MESSAGES);
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`);
+      const data = await res.json();
+      if (!res.ok) {
+        console.error("Load conversation error:", data);
+        setError("Could not load that conversation.");
+        return;
+      }
+      setMessages(
+        (data.messages ?? []).map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+      );
+    } catch (err) {
+      console.error(err);
+      setError("Could not load that conversation.");
+    }
+  }
+
+  // Creates a new conversation on the server and switches to it. Called
+  // both by the explicit "New chat" button and lazily the first time the
+  // user sends a message with no conversation selected yet.
+  async function startNewConversation() {
+    const res = await fetch("/api/conversations", { method: "POST" });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error ?? "Could not start a new conversation.");
+    }
+    setConversations((current) => [data.conversation, ...current]);
+    setActiveConversationId(data.conversation.id);
+    setMessages(INITIAL_MESSAGES);
+    return data.conversation.id;
+  }
+
+  async function handleDeleteConversation(conversationId, event) {
+    event.stopPropagation();
+    if (!window.confirm("Delete this conversation? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Could not delete this conversation.");
+      }
+      setConversations((current) =>
+        current.filter((c) => c.id !== conversationId),
+      );
+      if (activeConversationId === conversationId) {
+        openConversation(null);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not delete this conversation.",
+      );
+    }
+  }
+
+  function startRenaming(conversation, event) {
+    event.stopPropagation();
+    setRenamingId(conversation.id);
+    setRenameValue(conversation.title ?? "");
+  }
+
+  async function submitRename(conversationId) {
+    const title = renameValue.trim();
+    setRenamingId(null);
+    if (!title) return;
+
+    try {
+      const res = await fetch(`/api/conversations/${conversationId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "Could not rename this conversation.");
+      }
+      setConversations((current) =>
+        current.map((c) => (c.id === conversationId ? data.conversation : c)),
+      );
+    } catch (err) {
+      console.error(err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Could not rename this conversation.",
+      );
+    }
+  }
 
   useEffect(() => {
     document.body.classList.add("ai-chat-immersive");
@@ -367,10 +518,48 @@ export default function AiChatPage() {
     }
   }, [messages, loading, pendingAction]);
 
+  // The review card sits below the message list. Reveal it when an action is
+  // first ready, but do not force the scroll position again while the user is
+  // editing its fields.
+  useEffect(() => {
+    const shouldRevealReview = pendingAction && !wasReviewVisibleRef.current;
+    const node = conversationScrollRef.current;
+
+    if (shouldRevealReview && node) {
+      const reducedMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      node.scrollTo({
+        top: node.scrollHeight,
+        behavior: reducedMotion ? "auto" : "smooth",
+      });
+    }
+
+    wasReviewVisibleRef.current = Boolean(pendingAction);
+  }, [pendingAction]);
+
   async function sendMessage(text) {
     const trimmed = text.trim();
     if (!trimmed || loading) {
       return;
+    }
+
+    // Lazily start a conversation on the first message, same as ChatGPT
+    // does — there's no empty "Untitled" conversation sitting in the
+    // sidebar until the user actually says something.
+    let conversationId = activeConversationId;
+    if (!conversationId) {
+      try {
+        conversationId = await startNewConversation();
+      } catch (err) {
+        console.error(err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Could not start a new conversation.",
+        );
+        return;
+      }
     }
 
     const nextMessages = [...messages, { role: "user", content: trimmed }];
@@ -389,6 +578,7 @@ export default function AiChatPage() {
         body: JSON.stringify({
           message: trimmed,
           history: messages,
+          conversationId,
         }),
       });
 
@@ -450,6 +640,9 @@ export default function AiChatPage() {
       setError(err instanceof Error ? err.message : CHAT_REQUEST_ERROR);
     } finally {
       setLoading(false);
+      // Picks up the auto-generated title (set from the first message) and
+      // the conversation's new position at the top of the list.
+      loadConversations();
     }
   }
 
@@ -463,6 +656,7 @@ export default function AiChatPage() {
 
     setActionSending(true);
     setActionError("");
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
     try {
       let response;
@@ -480,14 +674,14 @@ export default function AiChatPage() {
         response = await fetch("/api/calendar", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(pendingAction),
+          body: JSON.stringify({ ...pendingAction, timeZone }),
         });
       } else if (pendingAction.kind === "calendar_update") {
         const { eventId, kind, ...changes } = pendingAction;
         response = await fetch(`/api/calendar/${eventId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(changes),
+          body: JSON.stringify({ ...changes, timeZone }),
         });
       } else {
         response = await fetch(`/api/calendar/${pendingAction.eventId}`, {
@@ -552,9 +746,195 @@ export default function AiChatPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,184,0,0.14),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
 
         <div className="relative flex h-full w-full gap-4 p-4 sm:p-5 lg:p-6">
+          {sidebarOpen ? (
+            <aside className="home-panel hidden w-72 shrink-0 flex-col overflow-hidden rounded-[28px] sm:flex">
+              <div className="flex items-center justify-between gap-2 border-b border-[var(--color-app-border)] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
+                  Chats
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(false)}
+                  aria-label="Collapse sidebar"
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface-soft)] hover:text-[var(--color-app-text)]"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      d="M15 6l-6 6 6 6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="px-3 pt-3">
+                <button
+                  type="button"
+                  onClick={() => openConversation(null)}
+                  className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-2.5 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      d="M12 5v14M5 12h14"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  New chat
+                </button>
+              </div>
+
+              <div className="mt-2 flex-1 overflow-y-auto px-2 pb-3">
+                {conversationsLoading ? (
+                  <div className="space-y-2 px-2 pt-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-9 animate-pulse rounded-[12px] bg-[var(--color-app-surface-strong)]"
+                      />
+                    ))}
+                  </div>
+                ) : conversations.length === 0 ? (
+                  <p className="px-3 pt-3 text-sm text-[var(--color-app-text-soft)]">
+                    No conversations yet. Send a message to start one.
+                  </p>
+                ) : (
+                  <ul className="space-y-0.5">
+                    {sortedConversations.map((conversation) => {
+                      const isActive = conversation.id === activeConversationId;
+                      const isRenaming = renamingId === conversation.id;
+                      return (
+                        <li key={conversation.id}>
+                          {isRenaming ? (
+                            <input
+                              autoFocus
+                              value={renameValue}
+                              onChange={(e) => setRenameValue(e.target.value)}
+                              onBlur={() => submitRename(conversation.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  submitRename(conversation.id);
+                                if (e.key === "Escape") setRenamingId(null);
+                              }}
+                              className="w-full rounded-[12px] border border-[var(--color-app-accent)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none"
+                            />
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => openConversation(conversation.id)}
+                              className={`group flex w-full items-center gap-2 rounded-[12px] px-3 py-2 text-left text-sm transition ${
+                                isActive
+                                  ? "bg-[var(--color-app-accent-soft)] text-[var(--color-app-text)]"
+                                  : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface-soft)]"
+                              }`}
+                            >
+                              <span className="min-w-0 flex-1 truncate">
+                                {conversation.title || "New conversation"}
+                              </span>
+                              <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) =>
+                                    startRenaming(conversation, e)
+                                  }
+                                  aria-label="Rename conversation"
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M12 20h9" strokeLinecap="round" />
+                                    <path
+                                      d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </span>
+                                <span
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={(e) =>
+                                    handleDeleteConversation(conversation.id, e)
+                                  }
+                                  aria-label="Delete conversation"
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-error)]"
+                                >
+                                  <svg
+                                    width="12"
+                                    height="12"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                  >
+                                    <path d="M3 6h18" strokeLinecap="round" />
+                                    <path
+                                      d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                    />
+                                  </svg>
+                                </span>
+                              </span>
+                            </button>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </aside>
+          ) : null}
+
           <section className="home-panel home-panel-strong relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px]">
             <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-6">
               <div className="flex items-center gap-3">
+                {!sidebarOpen ? (
+                  <button
+                    type="button"
+                    onClick={() => setSidebarOpen(true)}
+                    aria-label="Show chats"
+                    className="hidden h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:flex"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path
+                        d="M9 6l6 6-6 6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ) : null}
                 <span className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)]">
                   <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
                     <rect
@@ -588,10 +968,14 @@ export default function AiChatPage() {
               <div className="pointer-events-none absolute right-8 top-6 h-28 w-28 rounded-[38%] bg-[var(--color-app-accent)] opacity-45 blur-2xl" />
               <div className="pointer-events-none absolute bottom-6 left-8 h-24 w-24 rounded-full bg-[rgba(34,197,94,0.24)] blur-2xl" />
 
-              <div className="flex min-h-0 flex-1 flex-col">
+              <div
+                ref={conversationScrollRef}
+                className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
+              >
                 <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-start px-3 pb-2 pt-0 text-center">
                   <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(2.5rem,3vw,4.75rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
-                    Ask the agent to work your inbox and calendar from one place.
+                    Ask the agent to work your inbox and calendar from one
+                    place.
                   </h2>
                   <div className="mt-5 flex flex-wrap justify-center gap-3">
                     {starterPrompts.map((item) => (
@@ -616,7 +1000,9 @@ export default function AiChatPage() {
                       <div
                         key={`${message.role}-${index}`}
                         className={`flex ${
-                          message.role === "user" ? "justify-end" : "justify-start"
+                          message.role === "user"
+                            ? "justify-end"
+                            : "justify-start"
                         }`}
                       >
                         <div
@@ -660,7 +1046,8 @@ export default function AiChatPage() {
                         {actionTitle(pendingAction)}
                       </h3>
                       <p className="mt-2 text-sm leading-6 text-[var(--color-app-text-muted)]">
-                        Review the details below. Nothing happens until you confirm.
+                        Review the details below. Nothing happens until you
+                        confirm.
                       </p>
                       <div className="mt-5">
                         {pendingAction.kind === "email" ? (
@@ -689,7 +1076,9 @@ export default function AiChatPage() {
                           disabled={actionSending}
                           className="w-full rounded-[16px] bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                         >
-                          {actionSending ? "Working..." : confirmButtonLabel(pendingAction)}
+                          {actionSending
+                            ? "Working..."
+                            : confirmButtonLabel(pendingAction)}
                         </button>
                         <button
                           type="button"
@@ -713,7 +1102,10 @@ export default function AiChatPage() {
                   ) : null}
 
                   <div className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] p-1.5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-                    <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                    <form
+                      onSubmit={handleSubmit}
+                      className="flex items-center gap-2"
+                    >
                       <textarea
                         value={input}
                         onChange={(event) => setInput(event.target.value)}
@@ -733,7 +1125,11 @@ export default function AiChatPage() {
                         className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
                         aria-label="Send message"
                       >
-                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          className="h-3.5 w-3.5"
+                        >
                           <path
                             d="m5 12 13-7-4 7 4 7-13-7Z"
                             fill="currentColor"

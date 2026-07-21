@@ -70,3 +70,35 @@ export const users = pgTable("users", {
     .notNull()
     .defaultNow(),
 });
+
+// A single AI chat thread, shown as one entry in the chat sidebar.
+export const conversations = pgTable("conversations", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id),
+  // Auto-generated from the first user message (like ChatGPT). Nullable so
+  // a brand-new conversation can exist for a moment before its first
+  // message is saved.
+  title: text("title"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// One message within a conversation. role is "user" or "assistant" to match
+// what the chat UI and the OpenAI Agents SDK already use.
+export const chatMessages = pgTable("chat_messages", {
+  id: text("id").primaryKey(),
+  conversationId: text("conversation_id")
+    .notNull()
+    .references(() => conversations.id),
+  role: text("role").notNull(),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

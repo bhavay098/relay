@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "../../components/ThemeToggle";
-import { SignOutButton } from "../dashboard/components/SignOutButton";
 
 // Maps a route to the title shown in the top bar.
 const pageTitles = {
@@ -24,7 +23,6 @@ export function AppTopbar() {
         </h1>
         <div className="ml-auto flex flex-wrap items-center gap-2 sm:gap-3">
           <ThemeToggle />
-          <SignOutButton />
         </div>
       </div>
     </header>

@@ -15,6 +15,13 @@
       "when": 1781511543353,
       "tag": "0001_aberrant_spacker_dave",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784491870288,
+      "tag": "0002_faulty_puck",
+      "breakpoints": true
     }
   ]
 }
