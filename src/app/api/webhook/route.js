@@ -27,8 +27,7 @@ export async function POST(request) {
 
   // In multi-tenant mode, the tenantId tells Corsair which user this webhook is for.
   // You set this when registering the webhook URL (e.g. /api/webhook?tenantId=user_abc)
-  const tenantId =
-    new URL(request.url).searchParams.get("tenantId") ?? undefined;
+  const tenantId = new URL(request.url).searchParams.get("tenantId") ?? undefined;
 
   try {
     // processWebhook does all the work:
@@ -41,6 +40,8 @@ export async function POST(request) {
     if (!result.response) {
       return NextResponse.json({ success: false }, { status: 404 });
     }
+
+    console.info("Plugin processed:", result.plugin, result.action)
 
     return NextResponse.json(result.response);
   } catch (error) {
