@@ -4,8 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 
-// Each nav item: label shown to the user, href to route to,
-// and an inline SVG icon (no icon library needed).
 const navItems = [
   {
     label: "Agent",
@@ -92,63 +90,73 @@ export function AppSidebar() {
 
   return (
     <aside className="app-sidebar-shell fixed inset-y-0 left-0 z-40 hidden w-[var(--sidebar-width)] flex-col backdrop-blur-xl lg:flex">
-      {/* Logo / wordmark */}
-      <div className="flex items-center gap-2 px-6 py-6">
-        <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--color-app-accent)] font-[family:var(--font-inter)] text-sm font-bold text-[var(--color-app-accent-fg)]">
-          R
-        </span>
-        <span className="font-[family:var(--font-inter)] text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-app-text)]">
-          Relay
+      {/* Logo / Wordmark */}
+      <div className="flex items-center justify-between px-5 py-5 border-b border-[var(--color-app-border)]">
+        <Link href="/" className="flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--color-app-text)] font-[family:var(--font-inter)] text-xs font-bold text-[var(--color-app-bg)] shadow-sm">
+            R
+          </span>
+          <span className="font-[family:var(--font-inter)] text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-app-text)]">
+            Relay
+          </span>
+        </Link>
+        <span className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]">
+          v1.0
         </span>
       </div>
 
-      {/* Section label */}
-      <p className="px-6 pb-2 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
-        Workspace
-      </p>
+      {/* Navigation section */}
+      <div className="flex-1 px-3 py-4 space-y-1">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
+          Workspace
+        </p>
 
-      {/* Nav links */}
-      <nav className="flex flex-1 flex-col gap-1 px-3">
-        {navItems.map((item) => {
-          // Highlight the link if we're on that page (or a sub-page of it).
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+        <nav className="flex flex-col gap-1">
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + "/");
 
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`group flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-sm font-medium transition ${
-                isActive
-                  ? "bg-[var(--color-app-accent-soft)] text-[var(--color-app-accent)]"
-                  : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
-              }`}
-            >
-              <span
-                className={
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`group flex items-center gap-3 rounded-[14px] px-3 py-2.5 text-xs font-medium transition ${
                   isActive
-                    ? "text-[var(--color-app-accent)]"
-                    : "text-[var(--color-app-text-soft)] group-hover:text-[var(--color-app-text)]"
-                }
+                    ? "bg-[var(--color-app-surface-strong)] text-[var(--color-app-text)] border border-[var(--color-app-border-strong)] shadow-sm"
+                    : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
+                }`}
               >
-                {item.icon}
-              </span>
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+                <span
+                  className={
+                    isActive
+                      ? "text-[var(--color-app-text)]"
+                      : "text-[var(--color-app-text-soft)] group-hover:text-[var(--color-app-text)]"
+                  }
+                >
+                  {item.icon}
+                </span>
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
 
-      {/* Bottom: account */}
-      <div className="border-t border-[var(--color-app-border)] px-4 py-4">
-        <div className="flex items-center gap-3 rounded-[14px] px-2 py-2 hover:bg-[var(--color-app-surface)]">
-          <UserButton afterSignOutUrl="/sign-in" />
-          <Link
-            href="/"
-            className="text-xs font-medium uppercase tracking-[0.14em] text-[var(--color-app-text-soft)] hover:text-[var(--color-app-text)]"
-          >
-            Back to site
-          </Link>
+      {/* Account Profile Bottom Bar */}
+      <div className="border-t border-[var(--color-app-border)] p-3">
+        <div className="flex items-center justify-between rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2.5">
+          <div className="flex items-center gap-2.5">
+            <UserButton afterSignOutUrl="/sign-in" />
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold text-[var(--color-app-text)]">Account</span>
+              <Link
+                href="/"
+                className="text-[10px] uppercase tracking-[0.12em] text-[var(--color-app-text-soft)] hover:text-[var(--color-app-text)] transition"
+              >
+                Home site
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </aside>

@@ -16,7 +16,10 @@ function parseFromString(raw) {
   const match = raw.match(/^(.*?)<([^>]+)>\s*$/);
   if (match) {
     // Strip any wrapping quotes Gmail sometimes leaves around the name, e.g. "Jane Doe"
-    const name = match[1].trim().replace(/^"(.*)"$/, "$1").trim();
+    const name = match[1]
+      .trim()
+      .replace(/^"(.*)"$/, "$1")
+      .trim();
     const email = match[2].trim();
     return { name, email };
   }
@@ -30,7 +33,8 @@ function parseFromString(raw) {
 
 function formatSender(from) {
   if (!from) return "";
-  if (typeof from === "string") return parseFromString(from).name || parseFromString(from).email;
+  if (typeof from === "string")
+    return parseFromString(from).name || parseFromString(from).email;
   if (Array.isArray(from)) {
     const first = from[0];
     if (!first) return "";
@@ -153,14 +157,22 @@ function EmptyState({ onRefresh, refreshing }) {
   return (
     <div className="home-panel flex flex-col items-center gap-3 rounded-[28px] px-6 py-16 text-center">
       <div className="flex h-12 w-12 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)]">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-[var(--color-app-text-soft)]">
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          className="text-[var(--color-app-text-soft)]"
+        >
           <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
           <rect x="3" y="5" width="18" height="14" rx="2.5" />
         </svg>
       </div>
       <p className="text-sm text-[var(--color-app-text-muted)]">
-        No emails are in the local cache yet. That usually means Gmail hasn&apos;t
-        been provisioned or refreshed for this account.
+        No emails are in the local cache yet. That usually means Gmail
+        hasn&apos;t been provisioned or refreshed for this account.
       </p>
       <button
         onClick={onRefresh}
@@ -191,7 +203,15 @@ function ReadingPaneEmpty() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)]">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-[var(--color-app-text-soft)]">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          className="text-[var(--color-app-text-soft)]"
+        >
           <path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" />
           <rect x="3" y="5" width="18" height="14" rx="2.5" />
         </svg>
@@ -263,8 +283,19 @@ function EmailReadingPane({ messageId, listItem, onClose, showCloseButton }) {
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface-soft)] hover:text-[var(--color-app-text)]"
             aria-label="Back to inbox"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M15 6l-6 6 6 6" strokeLinecap="round" strokeLinejoin="round" />
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path
+                d="M15 6l-6 6 6 6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </button>
         ) : null}
@@ -358,7 +389,10 @@ function MessageList({ messages, activeId, onSelect }) {
                     {message.subject ?? "(no subject)"}
                   </span>
                   {message.snippet ? (
-                    <span className="text-[var(--color-app-text-soft)]"> — {message.snippet}</span>
+                    <span className="text-[var(--color-app-text-soft)]">
+                      {" "}
+                      — {message.snippet}
+                    </span>
                   ) : null}
                 </p>
               </div>
@@ -467,9 +501,6 @@ export default function EmailsPage() {
       <section className="home-panel home-panel-strong rounded-[28px] p-5 sm:p-7">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
-            <p className="inline-flex items-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1 font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
-              Inbox
-            </p>
             <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.03em] text-[var(--color-app-text)]">
               Recent messages in one clean stack.
             </h2>
@@ -496,9 +527,21 @@ export default function EmailsPage() {
                 strokeWidth="2"
                 className={refreshing ? "animate-spin" : ""}
               >
-                <path d="M4 4v5h5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M20 20v-5h-5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M4 9a8 8 0 0114-4.9M20 15a8 8 0 01-14 4.9" strokeLinecap="round" strokeLinejoin="round" />
+                <path
+                  d="M4 4v5h5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M20 20v-5h-5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M4 9a8 8 0 0114-4.9M20 15a8 8 0 01-14 4.9"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
               </svg>
               {refreshing ? "Refreshing…" : "Refresh"}
             </button>
@@ -515,7 +558,15 @@ export default function EmailsPage() {
         {/* Search */}
         {hasMessages ? (
           <div className="mt-5 flex items-center gap-2 rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2.5">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-[var(--color-app-text-soft)]">
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="shrink-0 text-[var(--color-app-text-soft)]"
+            >
               <circle cx="11" cy="11" r="7" />
               <path d="M21 21l-4.3-4.3" strokeLinecap="round" />
             </svg>
@@ -557,7 +608,10 @@ export default function EmailsPage() {
       {!loading && !error && messages.length === 0 ? (
         <EmptyState onRefresh={handleRefresh} refreshing={refreshing} />
       ) : null}
-      {!loading && !error && messages.length > 0 && filteredMessages.length === 0 ? (
+      {!loading &&
+      !error &&
+      messages.length > 0 &&
+      filteredMessages.length === 0 ? (
         <div className="home-panel rounded-[24px] px-5 py-10 text-center text-sm text-[var(--color-app-text-muted)]">
           No messages match &ldquo;{query}&rdquo;.
         </div>
