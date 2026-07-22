@@ -18,9 +18,7 @@
     "@corsair-dev/cli": "^0.1.19",
     "@corsair-dev/gmail": "^0.1.4",
     "@corsair-dev/googlecalendar": "^0.1.5",
-    "@corsair-dev/mcp": "^0.1.22",
     "@openai/agents": "^0.12.0",
-    "@t3-oss/env-nextjs": "^0.13.11",
     "corsair": "^0.1.76",
     "drizzle-orm": "^0.45.2",
     "next": "16.2.9",
@@ -31,7 +29,6 @@
     "rehype-sanitize": "^6.0.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
-    "svix": "^1.95.2",
     "zod": "^4.4.3"
   },
   "devDependencies": {
