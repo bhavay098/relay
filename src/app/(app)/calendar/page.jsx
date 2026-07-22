@@ -446,7 +446,7 @@ function EventModal({
                 disabled={responding}
                 className={`flex-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
                   selfAttendee.responseStatus === "accepted"
-                    ? "border-transparent bg-[var(--color-app-accent)] text-[var(--color-app-bg)]"
+                    ? "border-transparent bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
                     : "border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] hover:bg-[var(--color-app-surface)]"
                 }`}
               >
@@ -457,7 +457,7 @@ function EventModal({
                 disabled={responding}
                 className={`flex-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${
                   selfAttendee.responseStatus === "tentative"
-                    ? "border-transparent bg-[var(--color-app-accent)] text-[var(--color-app-bg)]"
+                    ? "border-transparent bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
                     : "border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] hover:bg-[var(--color-app-surface)]"
                 }`}
               >
@@ -501,7 +501,7 @@ function EventModal({
             <button
               onClick={handleSave}
               disabled={saving || deleting}
-              className="rounded-full bg-[var(--color-app-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-app-bg)] transition hover:opacity-90 disabled:opacity-50"
+              className="rounded-full bg-[var(--color-app-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:opacity-90 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -764,7 +764,7 @@ export default function CalendarPage() {
 
             <button
               onClick={() => openCreateModal(new Date(), new Date().getHours())}
-              className="rounded-full bg-[var(--color-app-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-app-bg)] transition hover:opacity-90"
+              className="rounded-full bg-[var(--color-app-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:opacity-90"
             >
               + Create
             </button>
@@ -811,7 +811,7 @@ export default function CalendarPage() {
                     <span
                       className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${
                         isToday
-                          ? "bg-[var(--color-app-accent)] text-[var(--color-app-bg)]"
+                          ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
                           : "text-[var(--color-app-text)]"
                       }`}
                     >

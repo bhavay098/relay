@@ -743,7 +743,7 @@ export default function AiChatPage() {
       `}</style>
 
       <div className="fixed inset-0 z-[60] overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-app-text)] lg:left-[var(--sidebar-width)]">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,184,0,0.14),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,255,255,0.1),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
 
         <div className="relative flex h-full w-full gap-4 p-4 sm:p-5 lg:p-6">
           {sidebarOpen ? (
