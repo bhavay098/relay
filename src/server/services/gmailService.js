@@ -42,6 +42,19 @@ export function isHydratedGmailMessage(message) {
   );
 }
 
+const MAILBOX_LABELS = {
+  inbox: "INBOX",
+  sent: "SENT",
+};
+
+export function getMailboxLabel(mailbox) {
+  return MAILBOX_LABELS[mailbox] ?? null;
+}
+
+export function hasGmailLabel(message, label) {
+  return Array.isArray(message?.labelIds) && message.labelIds.includes(label);
+}
+
 function messageTimestamp(row) {
   const internalDate = Number(row.data?.internalDate);
   if (Number.isFinite(internalDate)) return internalDate;
@@ -54,13 +67,20 @@ function newestFirst(left, right) {
   return messageTimestamp(right) - messageTimestamp(left);
 }
 
-export async function readHydratedGmailMessages(tenant, limit = 50) {
+export async function readHydratedGmailMessages(
+  tenant,
+  { label = MAILBOX_LABELS.inbox, limit = 50 } = {},
+) {
   // Corsair database entities expose the provider record under `row.data`.
-  // Do not return messages.list reference rows to the UI.
+  // Filter by a Gmail system label so the cache can safely hold both inbox
+  // and sent mail without mixing the two views.
   const rows = await tenant.gmail.db.messages.search({});
 
   return rows
-    .filter((row) => isHydratedGmailMessage(row.data))
+    .filter(
+      (row) =>
+        isHydratedGmailMessage(row.data) && hasGmailLabel(row.data, label),
+    )
     .sort(newestFirst)
     .slice(0, limit)
     .map((row) => row.data);

@@ -3,7 +3,10 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
-import { readHydratedGmailMessagesById } from "@/server/services/gmailService.js";
+import {
+  getMailboxLabel,
+  readHydratedGmailMessagesById,
+} from "@/server/services/gmailService.js";
 
 const MAX_SYNCED_MESSAGES = 20;
 const HYDRATION_CONCURRENCY = 5;
@@ -35,6 +38,12 @@ export async function POST(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const mailbox = new URL(request.url).searchParams.get("mailbox") ?? "inbox";
+    const label = getMailboxLabel(mailbox);
+    if (!label) {
+      return NextResponse.json({ error: "Unknown mailbox." }, { status: 400 });
+    }
+
     const tenant = corsair.withTenant(userId);
 
     // messages.list only saves id/threadId reference rows. Fetch every listed
@@ -43,7 +52,7 @@ export async function POST(request) {
     // rows in an unspecified database order.
     const list = await tenant.gmail.api.messages.list({
       maxResults: MAX_SYNCED_MESSAGES,
-      labelIds: ["INBOX"],
+      labelIds: [label],
     });
 
     const messageIds = (list.messages ?? [])
@@ -56,6 +65,7 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
+      mailbox,
       count: messages.length,
       messages,
     });

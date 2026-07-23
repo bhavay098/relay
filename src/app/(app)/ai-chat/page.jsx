@@ -2,339 +2,25 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import ReactMarkdown from "react-markdown";
-import remarkBreaks from "remark-breaks";
-import remarkGfm from "remark-gfm";
-import rehypeSanitize from "rehype-sanitize";
 import { ThemeToggle } from "../../components/ThemeToggle";
+import {
+  parseSseChunk,
+  actionSuccessMessage,
+  CHAT_REQUEST_ERROR,
+  CHAT_STREAM_ERROR,
+  INITIAL_MESSAGES,
+} from "./utils";
+import { AssistantMessageContent } from "./components/AssistantMessageContent";
+import { ActionReviewCard } from "./components/ActionReviewCard";
+import { ChatSidebar } from "./components/ChatSidebar";
+import { ChatInput } from "./components/ChatInput";
+import { StarterPrompts } from "./components/StarterPrompts";
 
-function parseSseChunk(buffer, onEvent) {
-  const parts = buffer.split("\n\n");
-  const remainder = parts.pop() ?? "";
-
-  for (const part of parts) {
-    const line = part
-      .split("\n")
-      .find((candidate) => candidate.startsWith("data: "));
-
-    if (!line) {
-      continue;
-    }
-
-    try {
-      onEvent(JSON.parse(line.slice(6)));
-    } catch {
-      // Ignore malformed chunks and keep streaming.
-    }
-  }
-
-  return remainder;
-}
-
-const CHAT_REQUEST_ERROR = "Could not start the chat right now.";
-const CHAT_STREAM_ERROR = "I hit an error while responding. Please try again.";
-const INITIAL_MESSAGES = [];
-
-function actionTitle(action) {
-  if (action.kind === "email") return "Review email draft";
-  if (action.kind === "calendar_create") return "Review new calendar event";
-  if (action.kind === "calendar_update") return "Review calendar update";
-  return "Confirm calendar deletion";
-}
-
-function actionSuccessMessage(action) {
-  if (action.kind === "email") return "Email sent.";
-  if (action.kind === "calendar_create") return "Calendar event created.";
-  if (action.kind === "calendar_update") return "Calendar event updated.";
-  return "Calendar event deleted.";
-}
-
-function confirmButtonLabel(action) {
-  if (action.kind === "email") return "Send email";
-  if (action.kind === "calendar_create") return "Create event";
-  if (action.kind === "calendar_delete") return "Delete event";
-  return "Save changes";
-}
-
-function toDateTimeLocalValue(value) {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  const pad = (number) => String(number).padStart(2, "0");
-  return [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())]
-    .join("-")
-    .concat(`T${pad(date.getHours())}:${pad(date.getMinutes())}`);
-}
-
-function toIsoDateTime(value) {
-  if (!value) return "";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return date.toISOString();
-}
-
-function attendeesToInputValue(attendees) {
-  if (!Array.isArray(attendees)) return "";
-  return attendees.join(", ");
-}
-
-function attendeesFromInputValue(value) {
-  return value
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-}
-
-function EmailDraftReview({ draft, onChange }) {
-  return (
-    <div className="space-y-4">
-      <div>
-        <label
-          htmlFor="email-draft-to"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          To
-        </label>
-        <input
-          id="email-draft-to"
-          value={draft.to}
-          onChange={(event) => onChange({ ...draft, to: event.target.value })}
-          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="email-draft-subject"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          Subject
-        </label>
-        <input
-          id="email-draft-subject"
-          value={draft.subject}
-          onChange={(event) =>
-            onChange({ ...draft, subject: event.target.value })
-          }
-          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="email-draft-body"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          Message
-        </label>
-        <textarea
-          id="email-draft-body"
-          value={draft.body}
-          onChange={(event) => onChange({ ...draft, body: event.target.value })}
-          rows={7}
-          className="mt-2 min-h-36 w-full resize-y rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-    </div>
-  );
-}
-
-function CalendarDraftReview({ draft, onChange }) {
-  const updateField = (field, value) => {
-    onChange({ ...draft, [field]: value });
-  };
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label
-          htmlFor="calendar-draft-title"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          Title
-        </label>
-        <input
-          id="calendar-draft-title"
-          value={draft.summary ?? ""}
-          onChange={(event) => updateField("summary", event.target.value)}
-          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-      <div>
-        <label
-          htmlFor="calendar-draft-description"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          Description
-        </label>
-        <textarea
-          id="calendar-draft-description"
-          value={draft.description ?? ""}
-          onChange={(event) => updateField("description", event.target.value)}
-          rows={4}
-          className="mt-2 min-h-28 w-full resize-y rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm leading-6 text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label
-            htmlFor="calendar-draft-start"
-            className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-          >
-            Start
-          </label>
-          <input
-            id="calendar-draft-start"
-            type="datetime-local"
-            value={toDateTimeLocalValue(draft.start)}
-            onChange={(event) =>
-              updateField("start", toIsoDateTime(event.target.value))
-            }
-            className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-          />
-        </div>
-        <div>
-          <label
-            htmlFor="calendar-draft-end"
-            className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-          >
-            End
-          </label>
-          <input
-            id="calendar-draft-end"
-            type="datetime-local"
-            value={toDateTimeLocalValue(draft.end)}
-            onChange={(event) =>
-              updateField("end", toIsoDateTime(event.target.value))
-            }
-            className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none focus:border-[var(--color-app-accent)]"
-          />
-        </div>
-      </div>
-      <div>
-        <label
-          htmlFor="calendar-draft-attendees"
-          className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]"
-        >
-          Attendees
-        </label>
-        <input
-          id="calendar-draft-attendees"
-          value={attendeesToInputValue(draft.attendees)}
-          onChange={(event) =>
-            updateField(
-              "attendees",
-              attendeesFromInputValue(event.target.value),
-            )
-          }
-          placeholder="name@example.com, teammate@example.com"
-          className="mt-2 w-full rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)] focus:border-[var(--color-app-accent)]"
-        />
-      </div>
-    </div>
-  );
-}
-
-function CalendarActionReview({ action }) {
-  if (action.kind === "calendar_delete") {
-    return (
-      <p className="break-words text-sm leading-6 text-[var(--color-app-text-muted)]">
-        Delete {action.summary ? `“${action.summary}”` : "the selected event"}?
-        This cannot be undone from Relay.
-      </p>
-    );
-  }
-
-  const fields = [
-    ["Title", action.summary],
-    ["Start", action.start],
-    ["End", action.end],
-    ["Attendees", action.attendees?.join(", ")],
-  ].filter(([, value]) => value);
-
-  return (
-    <dl className="space-y-2 text-sm">
-      {fields.map(([label, value]) => (
-        <div key={label} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
-          <dt className="shrink-0 text-[var(--color-app-text-soft)] sm:w-20">
-            {label}
-          </dt>
-          <dd className="min-w-0 break-words text-[var(--color-app-text)]">
-            {value}
-          </dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
-function AssistantMessageContent({ content, loading }) {
-  if (!content) {
-    return loading ? "…" : " ";
-  }
-
-  return (
-    <div className="ai-markdown">
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[rehypeSanitize]}
-        components={{
-          a({ children, ...props }) {
-            return (
-              <a
-                {...props}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="ai-markdown-link"
-              >
-                {children}
-              </a>
-            );
-          },
-          blockquote({ children, ...props }) {
-            return (
-              <blockquote {...props} className="ai-markdown-quote">
-                {children}
-              </blockquote>
-            );
-          },
-          code({ className, children, ...props }) {
-            const isBlock = className?.includes("language-");
-            if (isBlock) {
-              return (
-                <code {...props} className={className}>
-                  {children}
-                </code>
-              );
-            }
-
-            return (
-              <code {...props} className="ai-markdown-inline-code">
-                {children}
-              </code>
-            );
-          },
-          pre({ children }) {
-            return <pre className="ai-markdown-pre">{children}</pre>;
-          },
-          table({ children, ...props }) {
-            return (
-              <div className="ai-markdown-table-wrap">
-                <table {...props} className="ai-markdown-table">
-                  {children}
-                </table>
-              </div>
-            );
-          },
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
-  );
-}
+const starterPrompts = [
+  "Summarize my last 5 emails",
+  "Draft a reply to the latest thread",
+  "Move tomorrow's review to Thursday",
+];
 
 export default function AiChatPage() {
   const [messages, setMessages] = useState(INITIAL_MESSAGES);
@@ -722,12 +408,6 @@ export default function AiChatPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const starterPrompts = [
-    "Summarize my last 5 emails",
-    "Draft a reply to the latest thread",
-    "Move tomorrow's review to Thursday",
-  ];
-
   return (
     <>
       <style jsx global>{`
@@ -746,168 +426,23 @@ export default function AiChatPage() {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,255,255,0.1),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
 
         <div className="relative flex h-full w-full gap-4 p-4 sm:p-5 lg:p-6">
-          {sidebarOpen ? (
-            <aside className="home-panel hidden w-72 shrink-0 flex-col overflow-hidden rounded-[28px] sm:flex">
-              <div className="flex items-center justify-between gap-2 border-b border-[var(--color-app-border)] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
-                  Chats
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(false)}
-                  aria-label="Collapse sidebar"
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface-soft)] hover:text-[var(--color-app-text)]"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      d="M15 6l-6 6 6 6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-
-              <div className="px-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => openConversation(null)}
-                  className="flex w-full items-center gap-2 rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-2.5 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path
-                      d="M12 5v14M5 12h14"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  New chat
-                </button>
-              </div>
-
-              <div className="mt-2 flex-1 overflow-y-auto px-2 pb-3">
-                {conversationsLoading ? (
-                  <div className="space-y-2 px-2 pt-2">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-9 animate-pulse rounded-[12px] bg-[var(--color-app-surface-strong)]"
-                      />
-                    ))}
-                  </div>
-                ) : conversations.length === 0 ? (
-                  <p className="px-3 pt-3 text-sm text-[var(--color-app-text-soft)]">
-                    No conversations yet. Send a message to start one.
-                  </p>
-                ) : (
-                  <ul className="space-y-0.5">
-                    {sortedConversations.map((conversation) => {
-                      const isActive = conversation.id === activeConversationId;
-                      const isRenaming = renamingId === conversation.id;
-                      return (
-                        <li key={conversation.id}>
-                          {isRenaming ? (
-                            <input
-                              autoFocus
-                              value={renameValue}
-                              onChange={(e) => setRenameValue(e.target.value)}
-                              onBlur={() => submitRename(conversation.id)}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter")
-                                  submitRename(conversation.id);
-                                if (e.key === "Escape") setRenamingId(null);
-                              }}
-                              className="w-full rounded-[12px] border border-[var(--color-app-accent)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none"
-                            />
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => openConversation(conversation.id)}
-                              className={`group flex w-full items-center gap-2 rounded-[12px] px-3 py-2 text-left text-sm transition ${
-                                isActive
-                                  ? "bg-[var(--color-app-accent-soft)] text-[var(--color-app-text)]"
-                                  : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface-soft)]"
-                              }`}
-                            >
-                              <span className="min-w-0 flex-1 truncate">
-                                {conversation.title || "New conversation"}
-                              </span>
-                              <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) =>
-                                    startRenaming(conversation, e)
-                                  }
-                                  aria-label="Rename conversation"
-                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <path d="M12 20h9" strokeLinecap="round" />
-                                    <path
-                                      d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4L16.5 3.5z"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                </span>
-                                <span
-                                  role="button"
-                                  tabIndex={0}
-                                  onClick={(e) =>
-                                    handleDeleteConversation(conversation.id, e)
-                                  }
-                                  aria-label="Delete conversation"
-                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-error)]"
-                                >
-                                  <svg
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <path d="M3 6h18" strokeLinecap="round" />
-                                    <path
-                                      d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                </span>
-                              </span>
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-            </aside>
-          ) : null}
+          <ChatSidebar
+            sidebarOpen={sidebarOpen}
+            onCollapse={() => setSidebarOpen(false)}
+            onNewChat={() => openConversation(null)}
+            conversations={conversations}
+            sortedConversations={sortedConversations}
+            conversationsLoading={conversationsLoading}
+            activeConversationId={activeConversationId}
+            onOpenConversation={openConversation}
+            renamingId={renamingId}
+            renameValue={renameValue}
+            onRenameValueChange={setRenameValue}
+            onStartRenaming={startRenaming}
+            onSubmitRename={submitRename}
+            onCancelRename={() => setRenamingId(null)}
+            onDeleteConversation={handleDeleteConversation}
+          />
 
           <section className="home-panel home-panel-strong relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px]">
             <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-6">
@@ -972,24 +507,10 @@ export default function AiChatPage() {
                 ref={conversationScrollRef}
                 className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
               >
-                <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-start px-3 pb-2 pt-0 text-center">
-                  <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(2.5rem,3vw,4.75rem)] font-medium leading-tight tracking-tight text-[var(--color-app-text)]">
-                    Ask the agent to work your inbox and calendar from one
-                    place.
-                  </h2>
-                  <div className="mt-5 flex flex-wrap justify-center gap-3">
-                    {starterPrompts.map((item) => (
-                      <button
-                        key={item}
-                        type="button"
-                        onClick={() => setInput(item)}
-                        className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-5 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
-                      >
-                        {item}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                <StarterPrompts
+                  prompts={starterPrompts}
+                  onSelect={setInput}
+                />
 
                 <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
                   <div
@@ -1032,67 +553,17 @@ export default function AiChatPage() {
                   ) : null}
 
                   {pendingAction ? (
-                    <section
-                      aria-labelledby="review-action-title"
-                      className="rounded-[26px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-chip)] p-4 sm:p-5"
-                    >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-accent)]">
-                        Approval required
-                      </p>
-                      <h3
-                        id="review-action-title"
-                        className="mt-2 text-lg font-medium text-[var(--color-app-text)]"
-                      >
-                        {actionTitle(pendingAction)}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-[var(--color-app-text-muted)]">
-                        Review the details below. Nothing happens until you
-                        confirm.
-                      </p>
-                      <div className="mt-5">
-                        {pendingAction.kind === "email" ? (
-                          <EmailDraftReview
-                            draft={pendingAction}
-                            onChange={setPendingAction}
-                          />
-                        ) : pendingAction.kind === "calendar_delete" ? (
-                          <CalendarActionReview action={pendingAction} />
-                        ) : (
-                          <CalendarDraftReview
-                            draft={pendingAction}
-                            onChange={setPendingAction}
-                          />
-                        )}
-                      </div>
-                      {actionError ? (
-                        <p className="mt-4 text-sm text-[var(--color-error)]">
-                          {actionError}
-                        </p>
-                      ) : null}
-                      <div className="mt-5 flex flex-col gap-3 sm:flex-row">
-                        <button
-                          type="button"
-                          onClick={confirmPendingAction}
-                          disabled={actionSending}
-                          className="w-full rounded-[16px] bg-[var(--color-app-accent)] px-4 py-2.5 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                        >
-                          {actionSending
-                            ? "Working..."
-                            : confirmButtonLabel(pendingAction)}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setPendingAction(null);
-                            setActionError("");
-                          }}
-                          disabled={actionSending}
-                          className="w-full rounded-[16px] border border-[var(--color-app-border)] px-4 py-2.5 text-sm font-medium text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-                        >
-                          Discard
-                        </button>
-                      </div>
-                    </section>
+                    <ActionReviewCard
+                      pendingAction={pendingAction}
+                      actionError={actionError}
+                      actionSending={actionSending}
+                      onConfirm={confirmPendingAction}
+                      onDiscard={() => {
+                        setPendingAction(null);
+                        setActionError("");
+                      }}
+                      onChangePendingAction={setPendingAction}
+                    />
                   ) : null}
 
                   {actionStatus ? (
@@ -1101,43 +572,12 @@ export default function AiChatPage() {
                     </div>
                   ) : null}
 
-                  <div className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] p-1.5 shadow-[0_12px_28px_rgba(15,23,42,0.06)]">
-                    <form
-                      onSubmit={handleSubmit}
-                      className="flex items-center gap-2"
-                    >
-                      <textarea
-                        value={input}
-                        onChange={(event) => setInput(event.target.value)}
-                        onKeyDown={async (event) => {
-                          if (event.key === "Enter" && !event.shiftKey) {
-                            event.preventDefault();
-                            await handleSubmit(event);
-                          }
-                        }}
-                        placeholder="Ask the agent to check Gmail, send a reply, or create a calendar event..."
-                        className="min-h-12 flex-1 resize-none rounded-full border-0 bg-transparent px-4 py-[5px] text-sm leading-5 text-[var(--color-app-text)] outline-none placeholder:text-[var(--color-app-text-soft)]"
-                        rows={2}
-                      />
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)] transition hover:bg-[var(--color-accent-hover)] disabled:cursor-not-allowed disabled:opacity-60"
-                        aria-label="Send message"
-                      >
-                        <svg
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          className="h-3.5 w-3.5"
-                        >
-                          <path
-                            d="m5 12 13-7-4 7 4 7-13-7Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </button>
-                    </form>
-                  </div>
+                  <ChatInput
+                    input={input}
+                    loading={loading}
+                    onInputChange={setInput}
+                    onSubmit={handleSubmit}
+                  />
                 </div>
               </div>
             </div>

@@ -1,0 +1,3 @@
+export function ReadingPaneEmpty() {
+  return <div className="flex h-full flex-col items-center justify-center gap-3 px-6 text-center"><div className="flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)]"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="text-[var(--color-app-text-soft)]"><path d="M3 7l9 6 9-6" strokeLinecap="round" strokeLinejoin="round" /><rect x="3" y="5" width="18" height="14" rx="2.5" /></svg></div><p className="text-sm text-[var(--color-app-text-soft)]">Select a message to read it here.</p></div>;
+}

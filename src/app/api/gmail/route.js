@@ -7,6 +7,7 @@ import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
 import {
+  getMailboxLabel,
   readHydratedGmailMessages,
   sendGmailMessage,
 } from "@/server/services/gmailService.js";
@@ -19,9 +20,15 @@ export async function GET(request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   try {
+    const mailbox = new URL(request.url).searchParams.get("mailbox") ?? "inbox";
+    const label = getMailboxLabel(mailbox);
+    if (!label) {
+      return NextResponse.json({ error: "Unknown mailbox." }, { status: 400 });
+    }
+
     const tenant = corsair.withTenant(userId);
-    const messages = await readHydratedGmailMessages(tenant);
-    return NextResponse.json({ messages });
+    const messages = await readHydratedGmailMessages(tenant, { label });
+    return NextResponse.json({ mailbox, messages });
 
   } catch (error) {
     console.error("Gmail list error:", error);
