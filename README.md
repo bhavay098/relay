@@ -27,10 +27,10 @@ on your behalf — after you review and approve them.
 
 | Layer              | Choice                                                           |
 | ------------------ | ---------------------------------------------------------------- |
-| Framework          | [Next.js 16](https://nextjs.org) (App Router), React 19          |
+| Framework          | Next.js 16 (App Router), React 19          |
 | Styling            | Tailwind CSS v4                                                  |
-| Auth               | [Clerk](https://clerk.com)                                       |
-| Database           | PostgreSQL + [Drizzle ORM](https://orm.drizzle.team)             |
+| Auth               | Clerk                                       |
+| Database           | PostgreSQL + Drizzle ORM             |
 | OAuth / connectors | [Corsair](https://corsair.dev) (Gmail + Google Calendar plugins) |
 | AI                 | OpenAI                                                           |
 
@@ -71,12 +71,12 @@ local `lib/` folder for pure helper functions.
 ### 1. Prerequisites
 
 - Node.js 20+
-- [pnpm](https://pnpm.io)
+- pnpm
 - Docker (for local Postgres), or your own Postgres instance
-- A [Clerk](https://clerk.com) application
+- A Clerk application
 - Google Cloud OAuth credentials with the Gmail API and Google Calendar API
   enabled (two separate OAuth client IDs, one per product)
-- An [OpenAI](https://platform.openai.com) API key
+- An OpenAI API key
 
 ### 2. Install dependencies
 
@@ -135,7 +135,7 @@ pnpm dev
 - **Data caching**: Gmail and Calendar data is synced into local Postgres
   tables via `refresh` endpoints, so the inbox and calendar pages read from
   a fast local cache rather than calling Google's APIs on every page load.
-  
+
 - **AI agent**: `api/ai` streams responses from OpenAI over Server-Sent
   Events. When the agent decides to send an email or change a calendar
   event, it returns a structured draft instead of acting immediately — the
