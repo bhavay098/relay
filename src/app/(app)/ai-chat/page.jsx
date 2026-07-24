@@ -41,7 +41,10 @@ export default function AiChatPage() {
   const [conversations, setConversations] = useState([]);
   const [conversationsLoading, setConversationsLoading] = useState(true);
   const [activeConversationId, setActiveConversationId] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  // Starts closed. On desktop this just means one tap to reveal it; on
+  // mobile the sidebar renders as a full-screen overlay (see ChatSidebar),
+  // so defaulting it open would cover the chat the moment the page loads.
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -411,9 +414,12 @@ export default function AiChatPage() {
   return (
     <>
       <style jsx global>{`
-        body.ai-chat-immersive .app-topbar-shell,
-        body.ai-chat-immersive .mobile-app-nav {
+        body.ai-chat-immersive .app-topbar-shell {
           display: none !important;
+        }
+
+        body.ai-chat-immersive .mobile-app-nav {
+          z-index: 70;
         }
 
         body.ai-chat-immersive .app-page > div,
@@ -425,7 +431,7 @@ export default function AiChatPage() {
       <div className="fixed inset-0 z-[60] overflow-hidden bg-[var(--color-app-bg)] text-[var(--color-app-text)] lg:left-[var(--sidebar-width)]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_80%_18%,rgba(255,255,255,0.1),transparent_18%),radial-gradient(circle_at_22%_86%,rgba(34,197,94,0.18),transparent_16%)] opacity-70" />
 
-        <div className="relative flex h-full w-full gap-4 p-4 sm:p-5 lg:p-6">
+        <div className="relative flex h-full w-full gap-4 p-3 pb-[calc(5.75rem+env(safe-area-inset-bottom))] sm:p-5 lg:p-6">
           <ChatSidebar
             sidebarOpen={sidebarOpen}
             onCollapse={() => setSidebarOpen(false)}
@@ -444,15 +450,15 @@ export default function AiChatPage() {
             onDeleteConversation={handleDeleteConversation}
           />
 
-          <section className="home-panel home-panel-strong relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[32px]">
-            <div className="flex items-center justify-between gap-4 px-5 py-5 sm:px-6">
+          <section className="home-panel home-panel-strong relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[24px] sm:rounded-[32px]">
+            <div className="flex items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
               <div className="flex items-center gap-3">
                 {!sidebarOpen ? (
                   <button
                     type="button"
                     onClick={() => setSidebarOpen(true)}
                     aria-label="Show chats"
-                    className="hidden h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:flex"
+                    className="flex h-10 w-10 items-center justify-center rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)]"
                   >
                     <svg
                       width="16"
@@ -489,7 +495,7 @@ export default function AiChatPage() {
                     />
                   </svg>
                 </span>
-                <h1 className="font-[family:var(--font-inter)] text-[18px] font-semibold tracking-[-0.03em] text-[var(--color-app-text)]">
+                <h1 className="font-[family:var(--font-inter)] text-base font-semibold tracking-[-0.03em] text-[var(--color-app-text)] sm:text-[18px]">
                   Chat
                 </h1>
               </div>
@@ -499,7 +505,7 @@ export default function AiChatPage() {
               </div>
             </div>
 
-            <div className="relative flex min-h-0 flex-1 flex-col px-4 pb-4 sm:px-6 sm:pb-6">
+            <div className="relative flex min-h-0 flex-1 flex-col px-3 pb-3 sm:px-6 sm:pb-6">
               <div className="pointer-events-none absolute right-8 top-6 h-28 w-28 rounded-[38%] bg-[var(--color-app-accent)] opacity-45 blur-2xl" />
               <div className="pointer-events-none absolute bottom-6 left-8 h-24 w-24 rounded-full bg-[rgba(34,197,94,0.24)] blur-2xl" />
 
@@ -507,10 +513,7 @@ export default function AiChatPage() {
                 ref={conversationScrollRef}
                 className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain"
               >
-                <StarterPrompts
-                  prompts={starterPrompts}
-                  onSelect={setInput}
-                />
+                <StarterPrompts prompts={starterPrompts} onSelect={setInput} />
 
                 <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
                   <div

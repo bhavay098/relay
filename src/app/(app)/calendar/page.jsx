@@ -60,7 +60,7 @@ export default function CalendarPage() {
   function handleSaved(savedEvent) { setEvents((current) => current.some((event) => event.id === savedEvent.id) ? current.map((event) => event.id === savedEvent.id ? savedEvent : event) : [...current, savedEvent]); setModalState(null); }
   function handleDeleted(eventId) { setEvents((current) => current.filter((event) => event.id !== eventId)); setModalState(null); }
 
-  return <div className="mx-auto flex max-w-[1400px] flex-col gap-4 px-4 sm:px-6 lg:px-8">
+  return <div className="mx-auto flex min-w-0 max-w-[1400px] flex-col gap-4 px-4 sm:px-6 lg:px-8">
     <CalendarHeader weekStart={weekStart} refreshing={refreshing} onWeekStartChange={setWeekStart} onRefresh={handleRefresh} onCreate={() => openCreateModal(new Date(), new Date().getHours())} />
     {error ? <div className="shrink-0 rounded-[22px] border border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.08)] px-4 py-4 text-sm text-[var(--color-error)]">{error}</div> : null}
     <WeekGrid loading={loading} weekStart={weekStart} days={days} today={weekStart ? new Date() : null} allDayByDay={allDayByDay} timedByDay={timedByDay} gridScrollRef={gridScrollRef} onCreate={openCreateModal} onEdit={(event) => setModalState({ event, start: null, end: null })} />

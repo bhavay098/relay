@@ -10,9 +10,9 @@ export const clerkAppearance = {
     fontFamily: "var(--font-inter), system-ui, sans-serif",
   },
   elements: {
-    rootBox: "text-[var(--color-app-text)]",
+    rootBox: "w-full max-w-full text-[var(--color-app-text)]",
     cardBox:
-      "bg-[var(--color-app-panel-strong)] text-[var(--color-app-text)] shadow-none border border-[var(--color-app-border-strong)]",
+      "w-full max-w-full bg-[var(--color-app-panel-strong)] text-[var(--color-app-text)] shadow-none border border-[var(--color-app-border-strong)]",
     card: [
       "w-full bg-transparent shadow-none",
       "border-0 p-0",

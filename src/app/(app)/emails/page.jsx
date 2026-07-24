@@ -106,7 +106,7 @@ export default function EmailsPage() {
   const mailboxLabel = mailbox === "sent" ? "sent messages" : "inbox";
 
   return (
-    <div className="mx-auto max-w-[1320px] space-y-5">
+    <div className="mx-auto min-w-0 max-w-[1320px] space-y-5">
       <EmailsHeader
         loading={loading}
         error={error}

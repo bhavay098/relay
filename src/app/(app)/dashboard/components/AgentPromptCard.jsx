@@ -22,7 +22,7 @@ export function AgentPromptCard() {
   }
 
   return (
-    <section className="home-panel home-panel-strong rounded-[28px] p-5 sm:p-6">
+    <section className="home-panel home-panel-strong w-full max-w-full overflow-hidden rounded-[28px] p-4 sm:p-6">
       <div className="flex items-center gap-2">
         <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-[var(--color-app-accent-soft)] text-[var(--color-app-accent)]">
           <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
@@ -61,7 +61,7 @@ export function AgentPromptCard() {
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Draft a reply, summarize an email, schedule a meeting..."
-          className="flex-1 rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-sm text-[var(--color-app-text)] placeholder:text-[var(--color-app-text-soft)] outline-none focus:border-[var(--color-app-accent)]"
+          className="min-w-0 flex-1 rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 text-sm text-[var(--color-app-text)] placeholder:text-[var(--color-app-text-soft)] outline-none focus:border-[var(--color-app-accent)]"
         />
         <button
           type="submit"
@@ -71,13 +71,13 @@ export function AgentPromptCard() {
         </button>
       </form>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-4 flex max-w-full flex-wrap gap-2">
         {suggestions.map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => goToAgent(s)}
-            className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-1.5 text-xs text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
+            className="max-w-full truncate rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-1.5 text-xs text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
           >
             {s}
           </button>

@@ -18,7 +18,7 @@ export function AppTopbar() {
   return (
     <header className="sticky top-0 z-30 px-4 pt-3 sm:px-6 lg:px-8">
       <div className="app-topbar-shell mx-auto flex min-h-[var(--topbar-height)] max-w-[1320px] items-center justify-between gap-3 rounded-[24px] px-4 py-2.5 backdrop-blur-xl sm:px-5">
-        <h1 className="shrink-0 font-[family:var(--font-inter)] text-xs sm:text-sm font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text)]">
+        <h1 className="min-w-0 truncate font-[family:var(--font-inter)] text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text)] sm:text-sm sm:tracking-[0.18em]">
           {title}
         </h1>
 

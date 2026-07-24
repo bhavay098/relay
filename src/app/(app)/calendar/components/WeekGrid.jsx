@@ -1,13 +1,209 @@
 "use client";
 
-import { CALENDAR_LOCALE, END_HOUR, formatHourLabel, getEventHue, HOUR_HEIGHT, isSameDay, START_HOUR } from "../utils";
+import {
+  CALENDAR_LOCALE,
+  END_HOUR,
+  formatHourLabel,
+  getEventHue,
+  HOUR_HEIGHT,
+  isSameDay,
+  START_HOUR,
+} from "../utils";
 
-export function WeekGrid({ loading, weekStart, days, today, allDayByDay, timedByDay, gridScrollRef, onCreate, onEdit }) {
-  const hours = Array.from({ length: END_HOUR - START_HOUR }, (_, index) => START_HOUR + index);
-  const eventTopAndHeight = (start, end) => { const startHour = start.getHours() + start.getMinutes() / 60; const endHour = Math.max(startHour + .25, end.getHours() + end.getMinutes() / 60); return { top: (startHour - START_HOUR) * HOUR_HEIGHT, height: (endHour - startHour) * HOUR_HEIGHT }; };
-  if (loading || !weekStart) return <section className="home-panel flex h-[calc(100vh-200px)] min-h-[480px] flex-col overflow-hidden rounded-[28px]"><div className="flex flex-1 items-center justify-center text-sm text-[var(--color-app-text-muted)]">Loading events…</div></section>;
-  return <section className="home-panel flex h-[calc(100vh-200px)] min-h-[480px] flex-col overflow-hidden rounded-[28px]"><div className="flex shrink-0 border-b border-[var(--color-app-border)]"><div className="w-14 shrink-0 sm:w-16" />{days.map((day, index) => <div key={index} className="flex flex-1 flex-col items-center gap-1 border-l border-[var(--color-app-border)] py-2.5"><span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-app-text-soft)]">{day.toLocaleDateString(CALENDAR_LOCALE, { weekday: "short" })}</span><span className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${isSameDay(day, today) ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]" : "text-[var(--color-app-text)]"}`}>{day.getDate()}</span></div>)}</div>
-    {allDayByDay.some((dayEvents) => dayEvents.length) ? <div className="flex shrink-0 border-b border-[var(--color-app-border)]"><div className="flex w-14 shrink-0 items-start justify-end pr-2 pt-1.5 text-[10px] text-[var(--color-app-text-soft)] sm:w-16">All day</div>{allDayByDay.map((dayEvents, index) => <div key={index} className="flex flex-1 flex-col gap-1 border-l border-[var(--color-app-border)] p-1">{dayEvents.map((event) => <button key={event.id} onClick={() => onEdit(event)} className="truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white transition hover:opacity-90" style={{ background: `hsl(${getEventHue(event.id)} 65% 45%)` }}>{event.summary ?? "(no title)"}</button>)}</div>)}</div> : null}
-    <div ref={gridScrollRef} className="flex-1 overflow-y-auto"><div className="flex" style={{ height: (END_HOUR - START_HOUR) * HOUR_HEIGHT }}><div className="w-14 shrink-0 sm:w-16">{hours.map((hour) => <div key={hour} style={{ height: HOUR_HEIGHT }} className="relative"><span className="absolute -top-2 right-2 text-[10px] text-[var(--color-app-text-soft)]">{hour === START_HOUR ? "" : formatHourLabel(hour)}</span></div>)}</div>{days.map((day, dayIndex) => { const isToday = isSameDay(day, today); return <div key={dayIndex} className="relative flex-1 border-l border-[var(--color-app-border)]">{hours.map((hour) => <button key={hour} onClick={() => onCreate(day, hour)} style={{ height: HOUR_HEIGHT }} className="block w-full border-b border-[var(--color-app-border)] text-left transition hover:bg-[var(--color-app-surface-soft)]" />)}{isToday ? <div className="pointer-events-none absolute inset-x-0 z-10 flex items-center" style={{ top: (today.getHours() + today.getMinutes() / 60 - START_HOUR) * HOUR_HEIGHT }}><div className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-error)]" style={{ marginLeft: -4 }} /><div className="h-px flex-1 bg-[var(--color-error)]" /></div> : null}{timedByDay[dayIndex].map(({ event, start, end }) => { const { top, height } = eventTopAndHeight(start, end); const hue = getEventHue(event.id); return <button key={event.id} onClick={(clickEvent) => { clickEvent.stopPropagation(); onEdit(event); }} style={{ top, height: Math.max(height, 22), background: `hsl(${hue} 55% 40%)`, borderLeft: `3px solid hsl(${hue} 70% 62%)` }} className="absolute inset-x-1 z-[5] overflow-hidden rounded-md px-2 py-1 text-left text-xs text-white shadow-sm transition hover:brightness-110"><p className="truncate font-medium leading-tight">{event.summary ?? "(no title)"}</p>{height > 32 ? <p className="truncate text-[10px] leading-tight text-white/80">{start.toLocaleTimeString(CALENDAR_LOCALE, { hour: "numeric", minute: "2-digit" })}</p> : null}</button>; })}</div>; })}</div></div>
-  </section>;
+// Minimum width for a single day column. Below this, a phone screen would
+// squish 7 columns into unreadable slivers, so instead we let the row
+// scroll sideways and each day keeps this comfortable width.
+const DAY_COLUMN_MIN_WIDTH = 120;
+
+export function WeekGrid({
+  loading,
+  weekStart,
+  days,
+  today,
+  allDayByDay,
+  timedByDay,
+  gridScrollRef,
+  onCreate,
+  onEdit,
+}) {
+  const hours = Array.from(
+    { length: END_HOUR - START_HOUR },
+    (_, index) => START_HOUR + index,
+  );
+  const eventTopAndHeight = (start, end) => {
+    const startHour = start.getHours() + start.getMinutes() / 60;
+    const endHour = Math.max(
+      startHour + 0.25,
+      end.getHours() + end.getMinutes() / 60,
+    );
+    return {
+      top: (startHour - START_HOUR) * HOUR_HEIGHT,
+      height: (endHour - startHour) * HOUR_HEIGHT,
+    };
+  };
+  if (loading || !weekStart)
+    return (
+      <section className="home-panel flex h-[calc(100dvh-200px)] min-h-[480px] flex-col overflow-hidden rounded-[28px]">
+        <div className="flex flex-1 items-center justify-center text-sm text-[var(--color-app-text-muted)]">
+          Loading events…
+        </div>
+      </section>
+    );
+  return (
+    <section className="home-panel flex h-[calc(100dvh-200px)] min-h-[480px] flex-col overflow-hidden rounded-[28px]">
+      {/*
+      The whole grid (header row + all-day row + hour rows) scrolls together
+      horizontally on narrow screens via one shared scroll container, so the
+      day columns and their hour cells always stay lined up.
+    */}
+      <div className="flex flex-1 flex-col overflow-x-auto overflow-y-hidden">
+        <div
+          className="flex shrink-0 border-b border-[var(--color-app-border)]"
+          style={{ minWidth: days.length * DAY_COLUMN_MIN_WIDTH + 56 }}
+        >
+          <div className="w-14 shrink-0 sm:w-16" />
+          {days.map((day, index) => (
+            <div
+              key={index}
+              className="flex flex-1 flex-col items-center gap-1 border-l border-[var(--color-app-border)] py-2.5"
+              style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
+            >
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-app-text-soft)]">
+                {day.toLocaleDateString(CALENDAR_LOCALE, { weekday: "short" })}
+              </span>
+              <span
+                className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium ${isSameDay(day, today) ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]" : "text-[var(--color-app-text)]"}`}
+              >
+                {day.getDate()}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {allDayByDay.some((dayEvents) => dayEvents.length) ? (
+          <div
+            className="flex shrink-0 border-b border-[var(--color-app-border)]"
+            style={{ minWidth: days.length * DAY_COLUMN_MIN_WIDTH + 56 }}
+          >
+            <div className="flex w-14 shrink-0 items-start justify-end pr-2 pt-1.5 text-[10px] text-[var(--color-app-text-soft)] sm:w-16">
+              All day
+            </div>
+            {allDayByDay.map((dayEvents, index) => (
+              <div
+                key={index}
+                className="flex flex-1 flex-col gap-1 border-l border-[var(--color-app-border)] p-1"
+                style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
+              >
+                {dayEvents.map((event) => (
+                  <button
+                    key={event.id}
+                    onClick={() => onEdit(event)}
+                    className="truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white transition hover:opacity-90"
+                    style={{
+                      background: `hsl(${getEventHue(event.id)} 65% 45%)`,
+                    }}
+                  >
+                    {event.summary ?? "(no title)"}
+                  </button>
+                ))}
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        <div ref={gridScrollRef} className="flex-1 overflow-y-auto">
+          <div
+            className="flex"
+            style={{
+              height: (END_HOUR - START_HOUR) * HOUR_HEIGHT,
+              minWidth: days.length * DAY_COLUMN_MIN_WIDTH + 56,
+            }}
+          >
+            <div className="w-14 shrink-0 sm:w-16">
+              {hours.map((hour) => (
+                <div
+                  key={hour}
+                  style={{ height: HOUR_HEIGHT }}
+                  className="relative"
+                >
+                  <span className="absolute -top-2 right-2 text-[10px] text-[var(--color-app-text-soft)]">
+                    {hour === START_HOUR ? "" : formatHourLabel(hour)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {days.map((day, dayIndex) => {
+              const isToday = isSameDay(day, today);
+              return (
+                <div
+                  key={dayIndex}
+                  className="relative flex-1 border-l border-[var(--color-app-border)]"
+                  style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
+                >
+                  {hours.map((hour) => (
+                    <button
+                      key={hour}
+                      onClick={() => onCreate(day, hour)}
+                      style={{ height: HOUR_HEIGHT }}
+                      className="block w-full border-b border-[var(--color-app-border)] text-left transition hover:bg-[var(--color-app-surface-soft)]"
+                    />
+                  ))}
+                  {isToday ? (
+                    <div
+                      className="pointer-events-none absolute inset-x-0 z-10 flex items-center"
+                      style={{
+                        top:
+                          (today.getHours() +
+                            today.getMinutes() / 60 -
+                            START_HOUR) *
+                          HOUR_HEIGHT,
+                      }}
+                    >
+                      <div
+                        className="h-2 w-2 shrink-0 rounded-full bg-[var(--color-error)]"
+                        style={{ marginLeft: -4 }}
+                      />
+                      <div className="h-px flex-1 bg-[var(--color-error)]" />
+                    </div>
+                  ) : null}
+                  {timedByDay[dayIndex].map(({ event, start, end }) => {
+                    const { top, height } = eventTopAndHeight(start, end);
+                    const hue = getEventHue(event.id);
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={(clickEvent) => {
+                          clickEvent.stopPropagation();
+                          onEdit(event);
+                        }}
+                        style={{
+                          top,
+                          height: Math.max(height, 22),
+                          background: `hsl(${hue} 55% 40%)`,
+                          borderLeft: `3px solid hsl(${hue} 70% 62%)`,
+                        }}
+                        className="absolute inset-x-1 z-[5] overflow-hidden rounded-md px-2 py-1 text-left text-xs text-white shadow-sm transition hover:brightness-110"
+                      >
+                        <p className="truncate font-medium leading-tight">
+                          {event.summary ?? "(no title)"}
+                        </p>
+                        {height > 32 ? (
+                          <p className="truncate text-[10px] leading-tight text-white/80">
+                            {start.toLocaleTimeString(CALENDAR_LOCALE, {
+                              hour: "numeric",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

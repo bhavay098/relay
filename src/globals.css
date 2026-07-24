@@ -119,6 +119,13 @@ body {
     color 300ms var(--ease-smooth);
 }
 
+/* Keep development-only annotation controls from covering phone navigation. */
+@media (max-width: 1023px) {
+  .agentation-toolbar {
+    display: none !important;
+  }
+}
+
 [data-theme="light"] {
   color-scheme: light;
   --color-app-bg: #f4f7fb;

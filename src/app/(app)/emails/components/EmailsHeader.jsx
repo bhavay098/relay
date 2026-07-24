@@ -23,10 +23,10 @@ export function EmailsHeader({
   const mailboxLabel = mailbox === "sent" ? "Sent" : "Inbox";
 
   return (
-    <section className="home-panel home-panel-strong rounded-[28px] p-5 sm:p-7">
+    <section className="home-panel home-panel-strong min-w-0 overflow-hidden rounded-[24px] p-4 sm:rounded-[28px] sm:p-7">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-2xl">
-          <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(1.5rem,3vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.03em] text-[var(--color-app-text)]">
+        <div className="min-w-0 max-w-2xl">
+          <h2 className="mt-3 text-balance font-[family:var(--font-inter)] text-[clamp(1.35rem,6vw,2.2rem)] font-normal leading-[1.08] tracking-[-0.03em] text-[var(--color-app-text)]">
             Recent messages in one clean stack.
           </h2>
           <div

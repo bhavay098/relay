@@ -53,9 +53,9 @@ export function MobileAppNav() {
   return (
     <nav
       aria-label="Mobile app navigation"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-app-border)] bg-[var(--color-app-panel-strong)]/95 px-3 py-2 backdrop-blur-xl lg:hidden"
+      className="mobile-app-nav fixed inset-x-0 bottom-0 z-40 border-t border-[var(--color-app-border)] bg-[var(--color-app-panel-strong)]/95 px-2 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] backdrop-blur-xl lg:hidden"
     >
-      <div className="mx-auto grid max-w-[1320px] grid-cols-4 gap-1.5">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-[repeat(4,minmax(0,1fr))] gap-1 sm:gap-1.5">
         {navItems.map((item) => {
           const isActive =
             pathname === item.href || pathname.startsWith(item.href + "/");
@@ -65,14 +65,14 @@ export function MobileAppNav() {
               key={item.href}
               href={item.href}
               aria-current={isActive ? "page" : undefined}
-              className={`flex flex-col items-center justify-center gap-1 rounded-[16px] px-2 py-2 text-[10px] font-medium transition active:scale-[0.97] ${
+              className={`flex min-w-0 flex-col items-center justify-center gap-1 rounded-[16px] px-1 py-2 text-[10px] font-medium transition active:scale-[0.97] sm:px-2 ${
                 isActive
                   ? "bg-[var(--color-app-surface-strong)] text-[var(--color-app-text)] font-semibold border border-[var(--color-app-border-strong)]"
                   : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
               }`}
             >
-              <span>{item.icon}</span>
-              <span className="uppercase tracking-[0.14em]">
+              <span className="shrink-0">{item.icon}</span>
+              <span className="max-w-full truncate uppercase tracking-[0.1em] sm:tracking-[0.14em]">
                 {item.label}
               </span>
             </Link>

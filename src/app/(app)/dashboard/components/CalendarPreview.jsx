@@ -85,9 +85,9 @@ export function CalendarPreview({ refreshKey }) {
   }, [refreshKey]);
 
   return (
-    <section className="home-panel rounded-[28px] p-5 sm:p-6">
+    <section className="home-panel w-full min-w-0 max-w-full overflow-hidden rounded-[28px] p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
             Calendar
           </p>
@@ -97,7 +97,7 @@ export function CalendarPreview({ refreshKey }) {
         </div>
         <Link
           href="/calendar"
-          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-app-accent)] hover:opacity-80"
+          className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-app-accent)] hover:opacity-80 sm:text-[11px] sm:tracking-[0.16em]"
         >
           View all
         </Link>
@@ -122,9 +122,9 @@ export function CalendarPreview({ refreshKey }) {
         {upcoming.map((event) => (
           <div
             key={event.id}
-            className="flex items-center justify-between gap-3 rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 transition hover:border-[var(--color-app-border-strong)]"
+            className="flex min-w-0 max-w-full items-center justify-between gap-3 overflow-hidden rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 transition hover:border-[var(--color-app-border-strong)]"
           >
-            <p className="truncate text-sm font-medium text-[var(--color-app-text)]">
+            <p className="min-w-0 flex-1 truncate text-sm font-medium text-[var(--color-app-text)]">
               {event.summary ?? "(untitled event)"}
             </p>
             <span className="shrink-0 text-xs text-[var(--color-app-text-soft)]">

@@ -27,12 +27,12 @@ export function LiveWorkspace() {
 
   return (
     <>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:gap-6 lg:grid-cols-2">
         <InboxPreview refreshKey={gmailRefreshedAt} />
         <CalendarPreview refreshKey={calendarRefreshedAt} />
       </div>
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
+      <div className="mt-5 grid w-full min-w-0 grid-cols-1 gap-4 sm:mt-6 sm:grid-cols-2">
         <GmailRefreshButton onRefreshed={handleGmailRefreshed} />
         <CalendarRefreshButton onRefreshed={handleCalendarRefreshed} />
       </div>

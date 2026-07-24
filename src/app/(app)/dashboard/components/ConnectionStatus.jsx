@@ -65,12 +65,12 @@ export function ConnectionStatus() {
   ];
 
   return (
-    <div className="grid gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid min-w-0 gap-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
         {services.map((service) => (
           <div
             key={service.label}
-            className="rounded-[22px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-4"
+            className="min-w-0 overflow-hidden rounded-[22px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-4"
           >
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-app-text-soft)]">
               {service.label}
@@ -94,7 +94,7 @@ export function ConnectionStatus() {
                 </span>
             </div>
             {service.issue ? (
-              <p className="mt-3 text-xs leading-6 text-[var(--color-error)]">
+              <p className="mt-3 break-words text-xs leading-6 text-[var(--color-error)]">
                 {service.issue}
               </p>
             ) : null}

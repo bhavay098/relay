@@ -39,9 +39,9 @@ export function InboxPreview({ refreshKey }) {
   const preview = messages.slice(0, 5);
 
   return (
-    <section className="home-panel rounded-[28px] p-5 sm:p-6">
+    <section className="home-panel w-full min-w-0 max-w-full overflow-hidden rounded-[28px] p-4 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="font-[family:var(--font-inter)] text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
             Inbox
           </p>
@@ -51,7 +51,7 @@ export function InboxPreview({ refreshKey }) {
         </div>
         <Link
           href="/emails"
-          className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-app-accent)] hover:opacity-80"
+          className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-app-accent)] hover:opacity-80 sm:text-[11px] sm:tracking-[0.16em]"
         >
           View all
         </Link>
@@ -79,7 +79,7 @@ export function InboxPreview({ refreshKey }) {
         {preview.map((message) => (
           <div
             key={message.id}
-            className="rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 transition hover:border-[var(--color-app-border-strong)]"
+            className="w-full min-w-0 max-w-full overflow-hidden rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-3 transition hover:border-[var(--color-app-border-strong)]"
           >
             <p className="truncate text-sm font-medium text-[var(--color-app-text)]">
               {message.subject ?? "(no subject)"}

@@ -19,8 +19,8 @@ const highlights = [
   },
 ];
 
-export default function SignUpPage() {
-  const { userId } = auth();
+export default async function SignUpPage() {
+  const { userId } = await auth();
 
   if (userId) {
     redirect("/dashboard");

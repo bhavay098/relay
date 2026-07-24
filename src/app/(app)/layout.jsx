@@ -12,13 +12,13 @@ export default async function AppLayout({ children }) {
   }
 
   return (
-    <div className="app-page home-grid-bg gradient-mesh min-h-screen overflow-x-hidden bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
+    <div className="app-page home-grid-bg gradient-mesh min-h-[100dvh] overflow-x-clip bg-[var(--color-app-bg)] text-[var(--color-app-text)]">
       <AppSidebar />
 
       {/* Content is pushed right by the sidebar's width on large screens */}
-      <div className="pb-20 lg:pl-[var(--sidebar-width)] lg:pb-0">
+      <div className="min-w-0 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pl-[var(--sidebar-width)] lg:pb-0">
         <AppTopbar />
-        <main className="px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</main>
       </div>
 
       <MobileAppNav />

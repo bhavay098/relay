@@ -19,6 +19,12 @@ export const metadata = {
   keywords: ["email", "calendar", "gmail", "google calendar", "corsair", "AI", "productivity"],
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
@@ -34,15 +40,17 @@ export default function RootLayout({ children }) {
                   }
                   document.documentElement.dataset.theme = theme;
                   document.documentElement.style.colorScheme = theme;
-                } catch (e) {}z
+                } catch (e) {}
               })();
             `}
           </Script>
         </head>
-        <body className="min-h-screen bg-[var(--color-app-bg)] text-[var(--color-app-text)] antialiased transition-colors duration-300">
+        <body className="min-h-[100dvh] overflow-x-clip bg-[var(--color-app-bg)] text-[var(--color-app-text)] antialiased transition-colors duration-300">
           {children}
           <IdleSignOut />
-          {process.env.NODE_ENV === "development" && <Agentation />}
+          {process.env.NODE_ENV === "development" && (
+            <Agentation className="agentation-toolbar" />
+          )}
         </body>
       </html>
     </ClerkProvider>
