@@ -19,6 +19,13 @@ const defaultColumns = [
       { label: "Sign up", href: "/sign-up" },
     ],
   },
+  {
+    heading: "Legal",
+    links: [
+      { label: "Privacy Policy", href: "/privacy" },
+      { label: "Terms of Service", href: "/terms" },
+    ],
+  },
 ];
 
 export function HomeFooter({ footerLinks, columns = defaultColumns }) {

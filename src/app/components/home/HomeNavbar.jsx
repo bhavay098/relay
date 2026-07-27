@@ -10,8 +10,38 @@ export function HomeNavbar({ navLinks }) {
             <div className="flex items-center justify-between gap-4">
               <Link
                 href="/"
-                className="font-[family:var(--font-inter)] text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-app-text)]"
+                className="flex items-center gap-2 font-[family:var(--font-inter)] text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-app-text)]"
               >
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                  className="shrink-0 text-[var(--color-app-text)]"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M8 32V14C8 10.686 10.686 8 14 8H26C29.314 8 32 10.686 32 14V18"
+                    stroke="currentColor"
+                    strokeWidth="2.6"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="8" cy="32" r="4" fill="currentColor" />
+                  <circle
+                    cx="20"
+                    cy="8"
+                    r="2.4"
+                    fill="currentColor"
+                    opacity="0.4"
+                  />
+                  <circle
+                    cx="32"
+                    cy="20"
+                    r="4"
+                    fill="currentColor"
+                    opacity="0.4"
+                  />
+                </svg>
                 Relay
               </Link>
               <nav className="hidden items-center gap-5 lg:flex">

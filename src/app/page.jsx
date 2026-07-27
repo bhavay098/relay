@@ -44,11 +44,7 @@ const commandQueue = [
   },
 ];
 
-const heroActions = [
-  "Read the thread",
-  "Draft the reply",
-  "Move the meeting",
-];
+const heroActions = ["Read the thread", "Draft the reply", "Move the meeting"];
 
 const workflowSteps = [
   {
@@ -144,7 +140,10 @@ export default function Home() {
         <CardGrid items={workflowSteps} />
       </section>
 
-      <section id="product" className="mx-auto max-w-[1320px] px-4 pb-20 sm:px-6 lg:px-8 lg:pb-24">
+      <section
+        id="product"
+        className="mx-auto max-w-[1320px] px-4 pb-20 sm:px-6 lg:px-8 lg:pb-24"
+      >
         <CardGrid items={focusPoints} />
       </section>
 
