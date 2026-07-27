@@ -6,6 +6,8 @@ view of your recent mail and upcoming events with a chat-based agent that can
 draft emails, create or update calendar events, and carry out those actions
 on your behalf — after you review and approve them.
 
+**[Live Demo](https://relay.bhavaynagpal.com/)** - Try the fully working app.
+
 ## Features
 
 - **Unified dashboard** — a "Brief" view with live previews of your inbox
