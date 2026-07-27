@@ -110,9 +110,9 @@ export default function Home() {
 
         <div className="mx-auto flex min-h-[calc(100vh-6rem)] w-full max-w-[1320px] flex-col px-4 py-6 sm:px-6 lg:px-8">
           <HomeHero
-            eyebrow="Real-time inbox operations"
-            title="One place to read, decide, and move the work forward."
-            description="Relay turns email classification, scheduling, and agent-assisted drafting into a single operating loop, so the next step stays visible instead of buried in another tab."
+            eyebrow="AI workspace for Gmail and Google Calendar"
+            title="Relay connects your Gmail and Google Calendar with an AI assistant, in one place."
+            description="Relay is a productivity app that links your Gmail inbox and Google Calendar so you can read messages, draft replies, and manage events, then use an AI chat assistant to summarize threads, draft emails, and schedule meetings on your behalf."
             primaryCta={{ label: "Start with Relay", href: "/sign-up" }}
             secondaryCta={{ label: "View dashboard", href: "/dashboard" }}
             capabilities={capabilities}
