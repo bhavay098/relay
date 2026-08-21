@@ -225,7 +225,7 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
         e.preventDefault();
         handleClose();
       }}
-      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent p-0 flex items-start justify-center px-4 pt-16 sm:pt-24 backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible open:flex closed:hidden"
+      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent px-4 pt-16 sm:pt-24 hidden open:flex items-start justify-center backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible"
     >
       {/* Palette Card */}
       <div className="animate-scaleIn relative flex w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">

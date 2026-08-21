@@ -81,7 +81,7 @@ export function ShortcutsModal({ isOpen, onClose }) {
         e.preventDefault();
         onClose();
       }}
-      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent p-0 flex items-center justify-center p-4 backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible open:flex closed:hidden"
+      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent p-4 hidden open:flex items-center justify-center backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible"
     >
       <div className="animate-scaleIn relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-app-border)] px-6 py-4">
