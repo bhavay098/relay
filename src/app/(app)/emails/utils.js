@@ -44,3 +44,44 @@ export function formatFullDate(internalDate) {
 export function toPlainText(html) {
   return html ? html.replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+\n/g, "\n").replace(/[ \t]+/g, " ").trim() : "";
 }
+
+export function decodeBase64UrlClient(data) {
+  if (!data) return "";
+  try {
+    const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+    const binary = atob(base64);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    return "";
+  }
+}
+
+export function extractClientEmailContent(message) {
+  if (!message) return { html: "", text: "" };
+  if (message.html) return { html: message.html, text: message.text || toPlainText(message.html) };
+
+  let html = "";
+  let text = "";
+
+  function walkPayload(part) {
+    if (!part) return;
+    const mimeType = part.mimeType || "";
+    const data = part.body?.data;
+    if (data) {
+      const decoded = decodeBase64UrlClient(data);
+      if (mimeType.toLowerCase().includes("text/html") && !html) html = decoded;
+      else if (mimeType.toLowerCase().includes("text/plain") && !text) text = decoded;
+    }
+    if (Array.isArray(part.parts)) {
+      for (const child of part.parts) walkPayload(child);
+    }
+  }
+
+  if (message.payload) walkPayload(message.payload);
+  if (!html && message.body && /<[a-z][\s\S]*>/i.test(message.body)) html = message.body;
+  if (!text && message.body) text = toPlainText(message.body);
+
+  return { html, text: text || message.snippet || "" };
+}
+

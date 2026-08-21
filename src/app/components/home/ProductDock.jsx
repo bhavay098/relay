@@ -106,8 +106,8 @@ export function ProductDock({
                 </div>
                 <div className="mt-3 rounded-[20px] border border-[var(--color-app-border)] bg-[var(--color-app-surface-soft)] p-4">
                   <p className="text-xs leading-6 text-[var(--color-app-text)] sm:text-sm">
-                    "Thanks for the update. I can make Thursday work. I have adjusted the
-                    review slot to 2:30 PM and attached the latest action list below."
+                    &ldquo;Thanks for the update. I can make Thursday work. I have adjusted the
+                    review slot to 2:30 PM and attached the latest action list below.&rdquo;
                   </p>
                 </div>
               </div>
@@ -196,7 +196,7 @@ export function ProductDock({
               <div className="mt-4 rounded-[20px] border border-[var(--color-app-border)] bg-[var(--color-app-surface-soft)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-app-text-soft)]">Smart Slot Proposal</p>
                 <p className="mt-2 text-xs leading-5 text-[var(--color-app-text-muted)] sm:text-sm">
-                  Found 2 open slots matching both participants' availability:
+                  Found 2 open slots matching both participants&apos; availability:
                 </p>
                 <div className="mt-3 space-y-2">
                   <div className="flex items-center justify-between rounded-xl border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2 text-xs">

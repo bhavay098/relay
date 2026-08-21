@@ -15,6 +15,12 @@ export function AppTopbar() {
   const pathname = usePathname();
   const title = pageTitles[pathname] ?? "Relay Workspace";
 
+  const triggerCommandPalette = () => {
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
+    );
+  };
+
   return (
     <header className="sticky top-0 z-30 px-4 pt-3 sm:px-6 lg:px-8">
       <div className="app-topbar-shell mx-auto flex min-h-[var(--topbar-height)] max-w-[1320px] items-center justify-between gap-3 rounded-[24px] px-4 py-2.5 backdrop-blur-xl sm:px-5">
@@ -23,6 +29,28 @@ export function AppTopbar() {
         </h1>
 
         <div className="ml-auto flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={triggerCommandPalette}
+            aria-label="Open command palette"
+            className="flex items-center gap-2 rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1.5 text-xs text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="h-3.5 w-3.5 text-[var(--color-app-text-soft)]"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" strokeLinecap="round" />
+            </svg>
+            <span className="hidden sm:inline">Search or command...</span>
+            <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-1.5 py-0.5 font-[family:var(--font-mono)] text-[10px] font-semibold text-[var(--color-app-text-soft)]">
+              ⌘K
+            </kbd>
+          </button>
+
           <ThemeToggle />
           {pathname === "/dashboard" ? <SignOutButton /> : null}
         </div>

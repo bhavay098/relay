@@ -142,6 +142,30 @@ export function AppSidebar() {
         </nav>
       </div>
 
+      {/* Quick shortcuts / help trigger */}
+      <div className="px-3 pb-2">
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(
+              new KeyboardEvent("keydown", { key: "?", bubbles: true })
+            );
+          }}
+          className="flex w-full items-center justify-between rounded-[14px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-2 text-left text-xs font-medium text-[var(--color-app-text-muted)] transition hover:border-[var(--color-app-border-strong)] hover:text-[var(--color-app-text)]"
+        >
+          <span className="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-3.5 w-3.5">
+              <circle cx="12" cy="12" r="10" />
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" strokeLinecap="round" />
+            </svg>
+            <span>Shortcuts</span>
+          </span>
+          <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-1.5 py-0.5 font-[family:var(--font-mono)] text-[10px]">
+            ?
+          </kbd>
+        </button>
+      </div>
+
       {/* Account Profile Bottom Bar */}
       <div className="border-t border-[var(--color-app-border)] p-3">
         <div className="flex items-center justify-between rounded-[16px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-3 py-2.5">

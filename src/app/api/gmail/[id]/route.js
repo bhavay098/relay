@@ -3,7 +3,10 @@
 import { NextResponse } from "next/server";
 import { getAuthUserId } from "@/server/getAuthUserId.js";
 import { corsair } from "@/server/corsair.js";
-import { readHydratedGmailMessagesById } from "@/server/services/gmailService.js";
+import {
+  readHydratedGmailMessagesById,
+  extractEmailContent,
+} from "@/server/services/gmailService.js";
 
 export async function GET(request, { params }) {
   const userId = await getAuthUserId();
@@ -24,7 +27,16 @@ export async function GET(request, { params }) {
       );
     }
 
-    return NextResponse.json({ message });
+    const { html, text, body } = extractEmailContent(message);
+
+    return NextResponse.json({
+      message: {
+        ...message,
+        html,
+        text,
+        body: body || message.body || text,
+      },
+    });
 
   } catch (error) {
     console.error("Gmail get message error:", error);

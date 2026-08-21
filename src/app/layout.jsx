@@ -4,6 +4,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "@/globals.css";
 import { Agentation } from "agentation";
 import { IdleSignOut } from "./components/auth/IdleSignOut";
+import { ToastProvider } from "./components/ToastProvider";
+import { GlobalCommandShell } from "./components/GlobalCommandShell";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -28,7 +30,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
-      <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <html lang="en" data-scroll-behavior="smooth" className={inter.variable} suppressHydrationWarning>
         <head>
           <Script id="relay-theme-init" strategy="beforeInteractive">
             {`
@@ -46,7 +48,10 @@ export default function RootLayout({ children }) {
           </Script>
         </head>
         <body className="min-h-[100dvh] overflow-x-clip bg-[var(--color-app-bg)] text-[var(--color-app-text)] antialiased transition-colors duration-300">
-          {children}
+          <ToastProvider>
+            {children}
+            <GlobalCommandShell />
+          </ToastProvider>
           <IdleSignOut />
           {process.env.NODE_ENV === "development" && (
             <Agentation className="agentation-toolbar" />

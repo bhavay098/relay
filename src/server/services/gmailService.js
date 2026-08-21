@@ -67,13 +67,74 @@ function newestFirst(left, right) {
   return messageTimestamp(right) - messageTimestamp(left);
 }
 
+export function decodeBase64Url(data) {
+  if (!data) return "";
+  try {
+    return Buffer.from(data, "base64url").toString("utf-8");
+  } catch {
+    try {
+      const base64 = data.replace(/-/g, "+").replace(/_/g, "/");
+      return Buffer.from(base64, "base64").toString("utf-8");
+    } catch {
+      return "";
+    }
+  }
+}
+
+export function extractEmailContent(message) {
+  if (!message) return { html: "", text: "", body: "" };
+
+  let html = "";
+  let text = "";
+
+  if (typeof message.html === "string" && message.html.trim()) {
+    html = message.html;
+  }
+  if (typeof message.body === "string" && message.body.trim()) {
+    if (/<[a-z][\s\S]*>/i.test(message.body)) {
+      html = html || message.body;
+    } else {
+      text = text || message.body;
+    }
+  }
+
+  function walkPayload(part) {
+    if (!part) return;
+
+    const mimeType = part.mimeType || "";
+    const data = part.body?.data;
+
+    if (data) {
+      const decoded = decodeBase64Url(data);
+      if (mimeType.toLowerCase().includes("text/html") && !html) {
+        html = decoded;
+      } else if (mimeType.toLowerCase().includes("text/plain") && !text) {
+        text = decoded;
+      }
+    }
+
+    if (Array.isArray(part.parts)) {
+      for (const childPart of part.parts) {
+        walkPayload(childPart);
+      }
+    }
+  }
+
+  if (message.payload) {
+    walkPayload(message.payload);
+  }
+
+  return {
+    html: html || (/<[a-z][\s\S]*>/i.test(text) ? text : ""),
+    text: text || message.snippet || "",
+    body: html || text || message.snippet || "",
+  };
+}
+
 export async function readHydratedGmailMessages(
   tenant,
   { label = MAILBOX_LABELS.inbox, limit = 50 } = {},
 ) {
-  // Corsair database entities expose the provider record under `row.data`.
-  // Filter by a Gmail system label so the cache can safely hold both inbox
-  // and sent mail without mixing the two views.
   const rows = await tenant.gmail.db.messages.search({});
 
   return rows
@@ -94,8 +155,6 @@ export async function readHydratedGmailMessagesById(tenant, messageIds) {
       .map((row) => [row.entity_id, row.data]),
   );
 
-  // Preserve Gmail's newest-first order instead of the database's unspecified
-  // entity order.
   return messageIds
     .map((id) => messagesById.get(id))
     .filter(Boolean);

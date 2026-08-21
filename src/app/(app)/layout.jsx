@@ -18,7 +18,9 @@ export default async function AppLayout({ children }) {
       {/* Content is pushed right by the sidebar's width on large screens */}
       <div className="min-w-0 pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pl-[var(--sidebar-width)] lg:pb-0">
         <AppTopbar />
-        <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">{children}</main>
+        <main className="min-w-0 px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+          {children}
+        </main>
       </div>
 
       <MobileAppNav />

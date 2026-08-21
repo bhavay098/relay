@@ -15,6 +15,8 @@ import { ActionReviewCard } from "./components/ActionReviewCard";
 import { ChatSidebar } from "./components/ChatSidebar";
 import { ChatInput } from "./components/ChatInput";
 import { StarterPrompts } from "./components/StarterPrompts";
+import { ToolExecutionBadge } from "./components/ToolExecutionBadge";
+import { useToast } from "../../components/ToastProvider";
 
 const starterPrompts = [
   "Summarize my last 5 emails",
@@ -36,6 +38,7 @@ export default function AiChatPage() {
   const wasReviewVisibleRef = useRef(false);
   const searchParams = useSearchParams();
   const autoSentRef = useRef(false);
+  const { showSuccess, showError } = useToast();
 
   // Chat history / conversation management state
   const [conversations, setConversations] = useState([]);
@@ -385,6 +388,7 @@ export default function AiChatPage() {
 
       const status = actionSuccessMessage(pendingAction);
       setActionStatus(status);
+      showSuccess(status);
       setMessages((current) => [
         ...current,
         { role: "assistant", content: status },
@@ -392,18 +396,18 @@ export default function AiChatPage() {
       setPendingAction(null);
     } catch (err) {
       console.error(err);
-      setActionError(
-        err instanceof Error ? err.message : "Could not complete this action.",
-      );
+      const errMsg = err instanceof Error ? err.message : "Could not complete this action.";
+      setActionError(errMsg);
+      showError(errMsg);
     } finally {
       setActionSending(false);
     }
   }
 
-  // If we arrived here from the dashboard's "Ask your agent" card
-  // (e.g. /ai-chat?prompt=Summarize+my+unread+emails), auto-send it once.
+  // If we arrived here from the dashboard or command palette
+  // (e.g. /ai-chat?prompt=... or /ai-chat?q=...), auto-send it once.
   useEffect(() => {
-    const prompt = searchParams.get("prompt");
+    const prompt = searchParams.get("prompt") || searchParams.get("q");
     if (prompt && !autoSentRef.current) {
       autoSentRef.current = true;
       sendMessage(prompt);
@@ -547,6 +551,9 @@ export default function AiChatPage() {
                         </div>
                       </div>
                     ))}
+                    {loading && (
+                      <ToolExecutionBadge status="Inspecting context and executing actions..." />
+                    )}
                   </div>
 
                   {error ? (

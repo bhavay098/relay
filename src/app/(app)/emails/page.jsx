@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { EmailReadingPane } from "./components/EmailReadingPane";
 import { EmailsHeader } from "./components/EmailsHeader";
 import { EmptyState } from "./components/EmptyState";
@@ -8,6 +8,7 @@ import { MessageList } from "./components/MessageList";
 import { ReadingPaneEmpty } from "./components/ReadingPaneEmpty";
 import { RowSkeleton } from "./components/RowSkeleton";
 import { EMAILS_ERROR, formatSender, formatSenderEmail } from "./utils";
+import { useToast } from "../../components/ToastProvider";
 
 export default function EmailsPage() {
   const [messages, setMessages] = useState([]);
@@ -17,6 +18,7 @@ export default function EmailsPage() {
   const [mailbox, setMailbox] = useState("inbox");
   const [query, setQuery] = useState("");
   const [activeId, setActiveId] = useState(null);
+  const { showSuccess, showError, showInfo } = useToast();
 
   useEffect(() => {
     const controller = new AbortController();
@@ -49,7 +51,7 @@ export default function EmailsPage() {
     return () => controller.abort();
   }, [mailbox]);
 
-  async function handleRefresh() {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     setError(null);
     try {
@@ -58,17 +60,21 @@ export default function EmailsPage() {
       });
       const data = await response.json();
       if (!response.ok) {
-        setError(data.error ?? EMAILS_ERROR);
+        const errMsg = data.error ?? EMAILS_ERROR;
+        setError(errMsg);
+        showError(errMsg);
         return;
       }
       setMessages(data.messages ?? []);
+      showSuccess(`Refreshed ${mailbox}: ${data.messages?.length ?? 0} messages`);
     } catch (caughtError) {
       console.error(caughtError);
       setError(EMAILS_ERROR);
+      showError(EMAILS_ERROR);
     } finally {
       setRefreshing(false);
     }
-  }
+  }, [mailbox, showSuccess, showError]);
 
   function handleMailboxChange(nextMailbox) {
     if (nextMailbox === mailbox) return;
@@ -76,15 +82,6 @@ export default function EmailsPage() {
     setQuery("");
     setActiveId(null);
   }
-
-  useEffect(() => {
-    if (!activeId) return;
-    const onKeyDown = (event) => {
-      if (event.key === "Escape") setActiveId(null);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [activeId]);
 
   const filteredMessages = useMemo(() => {
     if (!query.trim()) return messages;
@@ -95,13 +92,51 @@ export default function EmailsPage() {
         formatSenderEmail(message.from),
         message.subject ?? "",
         message.snippet ?? "",
-      ].some((value) => value.toLowerCase().includes(normalizedQuery)),
+      ].some((value) => value.toLowerCase().includes(normalizedQuery))
     );
   }, [messages, query]);
+
   const activeMessage = useMemo(
     () => messages.find((message) => message.id === activeId) ?? null,
-    [messages, activeId],
+    [messages, activeId]
   );
+
+  // Keyboard navigation for Superhuman-style power-users
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      // Don't capture when typing in an input/textarea
+      if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName)) return;
+
+      if (event.key === "Escape") {
+        setActiveId(null);
+      } else if (event.key === "j" || event.key === "ArrowDown") {
+        event.preventDefault();
+        if (filteredMessages.length === 0) return;
+        const currentIndex = filteredMessages.findIndex((m) => m.id === activeId);
+        const nextIndex = currentIndex < filteredMessages.length - 1 ? currentIndex + 1 : 0;
+        setActiveId(filteredMessages[nextIndex].id);
+      } else if (event.key === "k" || event.key === "ArrowUp") {
+        event.preventDefault();
+        if (filteredMessages.length === 0) return;
+        const currentIndex = filteredMessages.findIndex((m) => m.id === activeId);
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : filteredMessages.length - 1;
+        setActiveId(filteredMessages[prevIndex].id);
+      } else if (event.key === "e" && activeMessage) {
+        event.preventDefault();
+        showSuccess(`Archived: "${activeMessage.subject || "Email"}"`);
+      } else if (event.key === "r" && activeMessage) {
+        event.preventDefault();
+        const replyInput = document.getElementById("email-reply-prompt-input");
+        if (replyInput) {
+          replyInput.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [activeId, filteredMessages, activeMessage, showSuccess]);
+
   const hasMessages = !loading && !error && messages.length > 0;
   const mailboxLabel = mailbox === "sent" ? "sent messages" : "inbox";
 
@@ -120,6 +155,25 @@ export default function EmailsPage() {
         refreshing={refreshing}
         hasMessages={hasMessages}
       />
+
+      {/* Power-user helper hint pill */}
+      {hasMessages && (
+        <div className="hidden items-center justify-between px-2 text-[11px] text-[var(--color-app-text-soft)] sm:flex">
+          <div className="flex items-center gap-3">
+            <span>
+              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)]">J</kbd> /{" "}
+              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)]">K</kbd> navigate
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)]">R</kbd> AI reply
+            </span>
+            <span>
+              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)]">E</kbd> archive
+            </span>
+          </div>
+          <span>{filteredMessages.length} total messages</span>
+        </div>
+      )}
 
       {error ? (
         <div className="rounded-[22px] border border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.08)] px-4 py-4 text-sm text-[var(--color-error)]">
@@ -142,6 +196,7 @@ export default function EmailsPage() {
           mailbox={mailbox}
         />
       ) : null}
+
       {!loading && !error && messages.length > 0 && filteredMessages.length === 0 ? (
         <div className="home-panel rounded-[24px] px-5 py-10 text-center text-sm text-[var(--color-app-text-muted)]">
           No {mailboxLabel} match &ldquo;{query}&rdquo;.
