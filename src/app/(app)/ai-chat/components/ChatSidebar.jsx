@@ -26,7 +26,9 @@ export function ChatSidebar({
         full-screen overlay instead. Tapping the dimmed backdrop closes it,
         same as the email reading pane's mobile behavior.
       */}
-      <div
+      <button
+        type="button"
+        aria-label="Collapse sidebar backdrop"
         className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-[2px] sm:hidden"
         onClick={onCollapse}
       />
@@ -134,6 +136,11 @@ export function ChatSidebar({
                             role="button"
                             tabIndex={0}
                             onClick={(e) => onStartRenaming(conversation, e)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                onStartRenaming(conversation, e);
+                              }
+                            }}
                             aria-label="Rename conversation"
                             className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
                           >
@@ -159,6 +166,11 @@ export function ChatSidebar({
                             onClick={(e) =>
                               onDeleteConversation(conversation.id, e)
                             }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                onDeleteConversation(conversation.id, e);
+                              }
+                            }}
                             aria-label="Delete conversation"
                             className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-error)]"
                           >

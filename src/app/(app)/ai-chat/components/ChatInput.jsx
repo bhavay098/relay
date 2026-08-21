@@ -93,7 +93,11 @@ export function ChatInput({ input, loading, onInputChange, onSubmit }) {
       {/* Input bar */}
       <div className="rounded-[24px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-surface)] p-2 shadow-[0_12px_28px_rgba(15,23,42,0.08)] backdrop-blur-xl">
         <form onSubmit={onSubmit} className="flex flex-col gap-2">
+          <label htmlFor="chat-message-input" className="sr-only">
+            Chat message
+          </label>
           <textarea
+            id="chat-message-input"
             ref={textareaRef}
             value={input}
             onChange={(event) => onInputChange(event.target.value)}

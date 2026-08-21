@@ -243,7 +243,9 @@ export default function EmailsPage() {
 
       {activeId ? (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div
+          <button
+            type="button"
+            aria-label="Close email details backdrop"
             className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"
             onClick={() => setActiveId(null)}
           />

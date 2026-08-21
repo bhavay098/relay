@@ -191,7 +191,9 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
       className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16 sm:pt-24"
     >
       {/* Backdrop */}
-      <div
+      <button
+        type="button"
+        aria-label="Close command palette"
         className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
         onClick={onClose}
       />
@@ -210,7 +212,11 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.35-4.35" strokeLinecap="round" />
           </svg>
+          <label htmlFor="command-palette-input" className="sr-only">
+            Search commands or ask AI
+          </label>
           <input
+            id="command-palette-input"
             ref={inputRef}
             type="text"
             value={query}

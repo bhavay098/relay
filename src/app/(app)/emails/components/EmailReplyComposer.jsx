@@ -66,6 +66,9 @@ export function EmailReplyComposer({ message }) {
 
       {/* Input area */}
       <div className="mt-3">
+        <label htmlFor="email-reply-prompt-input" className="sr-only">
+          Reply instructions
+        </label>
         <textarea
           id="email-reply-prompt-input"
           value={promptText}

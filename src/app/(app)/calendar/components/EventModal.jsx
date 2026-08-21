@@ -150,7 +150,9 @@ export function EventModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div
+      <button
+        type="button"
+        aria-label="Close modal backdrop"
         className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
         onClick={onClose}
       />
@@ -177,7 +179,11 @@ export function EventModal({
           </button>
         </div>
         <div className="space-y-4 px-5 py-5">
+          <label htmlFor="event-title-input" className="sr-only">
+            Event title
+          </label>
           <input
+            id="event-title-input"
             autoFocus
             type="text"
             value={summary}

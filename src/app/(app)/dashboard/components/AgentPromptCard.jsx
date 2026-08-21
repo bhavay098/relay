@@ -57,7 +57,11 @@ export function AgentPromptCard() {
         }}
         className="mt-4 flex flex-col gap-3 sm:flex-row"
       >
+        <label htmlFor="agent-prompt-input" className="sr-only">
+          Ask your agent
+        </label>
         <input
+          id="agent-prompt-input"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           placeholder="Draft a reply, summarize an email, schedule a meeting..."

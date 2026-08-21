@@ -50,7 +50,9 @@ export function ShortcutsModal({ isOpen, onClose }) {
       aria-labelledby="shortcuts-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-      <div
+      <button
+        type="button"
+        aria-label="Close shortcuts modal backdrop"
         className="fixed inset-0 bg-black/60 backdrop-blur-md"
         onClick={onClose}
       />
