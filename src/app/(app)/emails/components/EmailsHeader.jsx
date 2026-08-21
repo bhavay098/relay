@@ -64,6 +64,7 @@ export function EmailsHeader({
 
         <div className="flex w-full items-center gap-2 sm:w-auto">
           <button
+            type="button"
             onClick={onRefresh}
             disabled={refreshing}
             className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
@@ -106,7 +107,7 @@ export function EmailsHeader({
             className="w-full bg-transparent text-sm text-[var(--color-app-text)] placeholder:text-[var(--color-app-text-soft)] focus:outline-none"
           />
           {query ? (
-            <button onClick={() => onQueryChange("")} className="shrink-0 text-xs text-[var(--color-app-text-soft)] transition hover:text-[var(--color-app-text)]">
+            <button type="button" onClick={() => onQueryChange("")} className="shrink-0 text-xs text-[var(--color-app-text-soft)] transition hover:text-[var(--color-app-text)]">
               Clear
             </button>
           ) : null}

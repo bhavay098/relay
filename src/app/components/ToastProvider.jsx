@@ -83,6 +83,7 @@ export function ToastProvider({ children }) {
             <span className="min-w-0 flex-1 leading-snug">{item.message}</span>
 
             <button
+              type="button"
               onClick={() => removeToast(item.id)}
               aria-label="Dismiss notification"
               className="ml-1 -mr-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[var(--color-app-text-soft)] transition hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"

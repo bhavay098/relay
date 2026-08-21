@@ -131,6 +131,7 @@ export function WeekGrid({
                 >
                   {dayEvents.map((event) => (
                     <button
+                      type="button"
                       key={event.id}
                       onClick={() => onEdit(event)}
                       className="truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white transition hover:brightness-110 shadow-sm"
@@ -183,6 +184,7 @@ export function WeekGrid({
                   {/* Hour slots */}
                   {hours.map((hour) => (
                     <button
+                      type="button"
                       key={hour}
                       onClick={() => onCreate(day, hour)}
                       style={{ height: HOUR_HEIGHT }}
@@ -211,6 +213,7 @@ export function WeekGrid({
                     const hue = getEventHue(event.id);
                     return (
                       <button
+                        type="button"
                         key={event.id}
                         onClick={(clickEvent) => {
                           clickEvent.stopPropagation();

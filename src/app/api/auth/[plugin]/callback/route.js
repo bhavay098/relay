@@ -43,7 +43,8 @@ export async function GET(request, { params }) {
     return NextResponse.redirect(new URL(ERROR_REDIRECT, request.url));
   }
 
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/${plugin}/callback`;
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin;
+  const redirectUri = `${appUrl}/api/auth/${plugin}/callback`;
 
   try {
     await processOAuthCallback(corsair, {

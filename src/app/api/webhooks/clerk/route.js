@@ -19,8 +19,8 @@ import { verifyWebhook } from "@clerk/nextjs/webhooks";
 import { NextResponse } from "next/server";
 import { createUser } from "@/server/services/userService.js";
 import { db } from "@/server/db/index.js";
-import { users } from "@/server/db/schema.js";
-import { eq } from "drizzle-orm";
+import { users, conversations, chatMessages } from "@/server/db/schema.js";
+import { eq, inArray } from "drizzle-orm";
 
 export async function POST(request) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
@@ -84,6 +84,21 @@ export async function POST(request) {
     const clerkUserId = data.id;
 
     try {
+      const userConvs = await db
+        .select({ id: conversations.id })
+        .from(conversations)
+        .where(eq(conversations.userId, clerkUserId));
+
+      if (userConvs.length > 0) {
+        const convIds = userConvs.map((c) => c.id);
+        await db
+          .delete(chatMessages)
+          .where(inArray(chatMessages.conversationId, convIds));
+        await db
+          .delete(conversations)
+          .where(eq(conversations.userId, clerkUserId));
+      }
+
       await db.delete(users).where(eq(users.id, clerkUserId));
       console.log(`User deleted: ${clerkUserId}`);
       // Note: Corsair account rows are left in place (tokens become invalid anyway)

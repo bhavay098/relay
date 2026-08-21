@@ -7,9 +7,18 @@ export function CalendarHeader({
   weekStart,
   refreshing,
   onWeekStartChange,
+  onPrevWeek,
+  onNextWeek,
+  onToday,
   onRefresh,
   onCreate,
+  onNewEvent,
 }) {
+  const handleToday = onToday || (() => onWeekStartChange?.(startOfWeek(new Date())));
+  const handlePrev = onPrevWeek || (() => onWeekStartChange?.((date) => addDays(date, -7)));
+  const handleNext = onNextWeek || (() => onWeekStartChange?.((date) => addDays(date, 7)));
+  const handleCreate = onNewEvent || onCreate;
+
   return (
     <section className="home-panel home-panel-strong shrink-0 rounded-[24px] p-3.5 sm:rounded-[28px] sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -23,7 +32,8 @@ export function CalendarHeader({
             </span>
           </div>
           <button
-            onClick={() => onWeekStartChange(startOfWeek(new Date()))}
+            type="button"
+            onClick={handleToday}
             className="shrink-0 rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1.5 text-xs font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:hidden"
           >
             Today
@@ -32,7 +42,8 @@ export function CalendarHeader({
 
         <div className="grid grid-cols-[auto_auto_auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:flex-wrap">
           <button
-            onClick={() => onWeekStartChange(startOfWeek(new Date()))}
+            type="button"
+            onClick={handleToday}
             className="hidden items-center gap-1.5 rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-1.5 text-xs font-medium text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] sm:inline-flex"
           >
             <span>Today</span>
@@ -41,7 +52,8 @@ export function CalendarHeader({
 
           <div className="flex items-center overflow-hidden rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)]">
             <button
-              onClick={() => onWeekStartChange((date) => addDays(date, -7))}
+              type="button"
+              onClick={handlePrev}
               aria-label="Previous week"
               className="flex h-8 w-8 items-center justify-center text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
             >
@@ -51,7 +63,8 @@ export function CalendarHeader({
             </button>
             <div className="h-4 w-px bg-[var(--color-app-border)]" />
             <button
-              onClick={() => onWeekStartChange((date) => addDays(date, 7))}
+              type="button"
+              onClick={handleNext}
               aria-label="Next week"
               className="flex h-8 w-8 items-center justify-center text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
             >
@@ -62,6 +75,7 @@ export function CalendarHeader({
           </div>
 
           <button
+            type="button"
             onClick={onRefresh}
             disabled={refreshing}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] transition hover:border-[var(--color-app-border-strong)] hover:bg-[var(--color-app-surface)] disabled:cursor-not-allowed disabled:opacity-50"
@@ -83,7 +97,8 @@ export function CalendarHeader({
           </button>
 
           <button
-            onClick={onCreate}
+            type="button"
+            onClick={handleCreate}
             className="flex items-center gap-1.5 rounded-full bg-[var(--color-app-accent)] px-3.5 py-1.5 text-xs font-semibold text-[var(--color-app-accent-fg)] transition hover:brightness-110 sm:text-xs"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" className="h-3 w-3">

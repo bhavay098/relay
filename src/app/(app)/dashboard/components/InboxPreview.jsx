@@ -22,7 +22,8 @@ const MONTH_NAMES = [
 
 function formatPreviewDate(rawDate) {
   if (!rawDate) return "";
-  const date = new Date(rawDate);
+  const num = Number(rawDate);
+  const date = Number.isFinite(num) ? new Date(num) : new Date(rawDate);
   if (Number.isNaN(date.getTime())) return "";
   return `${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
 }

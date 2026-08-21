@@ -231,7 +231,7 @@ export async function POST(request) {
           }),
           strict: true,
           async execute({ limit }) {
-            const messages = await readHydratedGmailMessages(tenant, limit);
+            const messages = await readHydratedGmailMessages(tenant, { limit });
             return JSON.stringify(toCachedMessages(messages, limit));
           },
         });

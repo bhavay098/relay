@@ -126,14 +126,15 @@ export function useAiChat({ getActiveConversationId, onEnsureConversation, onCha
           }
 
           if (event.type === "error") {
-            setError(CHAT_STREAM_ERROR);
+            const errorMsg = event.content || CHAT_STREAM_ERROR;
+            setError(errorMsg);
             setMessages((current) => {
               const copy = [...current];
               const lastIndex = copy.length - 1;
               if (lastIndex >= 0) {
                 copy[lastIndex] = {
                   ...copy[lastIndex],
-                  content: "I hit an error while responding.",
+                  content: errorMsg,
                 };
               }
               return copy;

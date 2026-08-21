@@ -93,6 +93,7 @@ export function EmailReadingPane({
         <div className="flex min-w-0 items-center gap-3">
           {showCloseButton ? (
             <button
+              type="button"
               onClick={onClose}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface-soft)] hover:text-[var(--color-app-text)]"
               aria-label="Back to mailbox"
