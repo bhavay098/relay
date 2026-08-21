@@ -20,24 +20,27 @@ function normalizeHistory(history) {
     return [];
   }
 
-  return history
-    .filter(
-      (item) =>
-        item &&
-        typeof item === "object" &&
-        (item.role === "user" || item.role === "assistant") &&
-        typeof item.content === "string" &&
-        item.content.trim().length > 0,
-    )
-    .map((item) => ({
-      role: item.role,
-      content: [
-        {
-          type: item.role === "assistant" ? "output_text" : "input_text",
-          text: item.content,
-        },
-      ],
-    }));
+  const result = [];
+  for (const item of history) {
+    if (
+      item &&
+      typeof item === "object" &&
+      (item.role === "user" || item.role === "assistant") &&
+      typeof item.content === "string" &&
+      item.content.trim().length > 0
+    ) {
+      result.push({
+        role: item.role,
+        content: [
+          {
+            type: item.role === "assistant" ? "output_text" : "input_text",
+            text: item.content,
+          },
+        ],
+      });
+    }
+  }
+  return result;
 }
 
 function requestedServices(message) {
@@ -374,12 +377,13 @@ export async function POST(request) {
             // .delta field, but that's the tool's raw JSON arguments, not
             // text meant for the chat - forwarding it would leak partial
             // tool-call JSON into the user's message bubble.
+            const delta = event.data?.delta;
             if (
               event.data?.type === "output_text_delta" &&
-              typeof event.data.delta === "string"
+              typeof delta === "string"
             ) {
-              assistantReply += event.data.delta;
-              send({ type: "text", content: event.data.delta });
+              assistantReply += delta;
+              send({ type: "text", content: delta });
             }
             continue;
           }

@@ -11,15 +11,15 @@ const pageTitles = {
   "/ai-chat": "AI Agent Command",
 };
 
+function triggerCommandPalette() {
+  window.dispatchEvent(
+    new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
+  );
+}
+
 export function AppTopbar() {
   const pathname = usePathname();
   const title = pageTitles[pathname] ?? "Relay Workspace";
-
-  const triggerCommandPalette = () => {
-    window.dispatchEvent(
-      new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true })
-    );
-  };
 
   return (
     <header className="sticky top-0 z-30 px-4 pt-3 sm:px-6 lg:px-8">

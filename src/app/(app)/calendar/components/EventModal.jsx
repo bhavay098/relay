@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getEventRange, rsvpStatusLabel, toLocalInputValue } from "../utils";
+import { getEventRange, toLocalInputValue } from "../utils";
+import { EventModalHeader } from "./EventModalHeader";
+import { EventAttendeesList } from "./EventAttendeesList";
+import { EventRsvpSection } from "./EventRsvpSection";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -19,17 +22,16 @@ export function EventModal({
   const [description, setDescription] = useState(
     initialEvent?.description ?? "",
   );
-  const [startValue, setStartValue] = useState(
+  const [startValue, setStartValue] = useState(() =>
     toLocalInputValue(initialRange?.start ?? initialStart),
   );
-  const [endValue, setEndValue] = useState(
+  const [endValue, setEndValue] = useState(() =>
     toLocalInputValue(initialRange?.end ?? initialEnd),
   );
-  const [guestsInput, setGuestsInput] = useState(
+  const [guestsInput, setGuestsInput] = useState(() =>
     Array.isArray(initialEvent?.attendees)
       ? initialEvent.attendees
-          .map((attendee) => attendee.email)
-          .filter(Boolean)
+          .flatMap((attendee) => (attendee.email ? [attendee.email] : []))
           .join(", ")
       : "",
   );
@@ -50,6 +52,7 @@ export function EventModal({
   }, [onClose]);
 
   async function handleSave() {
+    if (saving || deleting || responding) return;
     if (!summary.trim()) return setError("Give the event a title.");
     if (new Date(endValue) <= new Date(startValue))
       return setError("End time must be after the start time.");
@@ -97,6 +100,7 @@ export function EventModal({
   }
 
   async function handleDelete() {
+    if (deleting || saving || responding) return;
     if (
       !isEditing ||
       !window.confirm("Delete this event? This cannot be undone.")
@@ -119,11 +123,13 @@ export function EventModal({
           ? caughtError.message
           : "Could not delete this event.",
       );
+    } finally {
       setDeleting(false);
     }
   }
 
   async function handleRespond(status) {
+    if (responding || saving || deleting) return;
     setResponding(true);
     setError("");
     try {
@@ -157,34 +163,13 @@ export function EventModal({
         onClick={onClose}
       />
       <div className="relative flex max-h-[calc(100vh-2rem)] w-full max-w-md flex-col overflow-y-auto rounded-[24px] border border-[var(--color-app-border)] bg-[var(--color-app-panel-strong)] shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[var(--color-app-border)] bg-[var(--color-app-panel-strong)] px-5 py-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--color-app-text-soft)]">
-            {isEditing ? "Edit event" : "New event"}
-          </p>
-          <button
-            onClick={onClose}
-            aria-label="Close"
-            className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-app-text-muted)] transition hover:bg-[var(--color-app-surface-soft)] hover:text-[var(--color-app-text)]"
-          >
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path d="M6 6l12 12M18 6L6 18" strokeLinecap="round" />
-            </svg>
-          </button>
-        </div>
+        <EventModalHeader isEditing={isEditing} onClose={onClose} />
         <div className="space-y-4 px-5 py-5">
           <label htmlFor="event-title-input" className="sr-only">
             Event title
           </label>
           <input
             id="event-title-input"
-            autoFocus
             type="text"
             value={summary}
             onChange={(event) => setSummary(event.target.value)}
@@ -239,59 +224,26 @@ export function EventModal({
               className="w-full rounded-[10px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-2 text-sm text-[var(--color-app-text)] placeholder:text-[var(--color-app-text-soft)] focus:border-[var(--color-app-accent)] focus:outline-none"
             />
           </label>
-          {isEditing && initialEvent.attendees?.length ? (
-            <div className="rounded-[10px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-3 py-2.5">
-              <p className="mb-1.5 text-xs font-medium text-[var(--color-app-text-soft)]">
-                {initialEvent.attendees.length} guest
-                {initialEvent.attendees.length === 1 ? "" : "s"}
-              </p>
-              <ul className="space-y-1">
-                {initialEvent.attendees.map((attendee) => (
-                  <li
-                    key={attendee.email}
-                    className="flex items-center justify-between gap-2 text-sm text-[var(--color-app-text)]"
-                  >
-                    <span className="truncate">{attendee.email}</span>
-                    <span className="shrink-0 text-xs text-[var(--color-app-text-soft)]">
-                      {rsvpStatusLabel(attendee.responseStatus)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {isEditing ? (
+            <EventAttendeesList attendees={initialEvent.attendees} />
           ) : null}
           {error ? (
             <p className="text-sm text-[var(--color-error)]">{error}</p>
           ) : null}
         </div>
-        {isEditing && selfAttendee ? (
-          <div className="border-t border-[var(--color-app-border)] px-5 py-3">
-            <p className="mb-2 text-xs font-medium text-[var(--color-app-text-soft)]">
-              Going?
-            </p>
-            <div className="flex items-center gap-2">
-              {[
-                ["accepted", "Yes"],
-                ["tentative", "Maybe"],
-                ["declined", "No"],
-              ].map(([status, label]) => (
-                <button
-                  key={status}
-                  onClick={() => handleRespond(status)}
-                  disabled={responding}
-                  className={`flex-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition disabled:opacity-50 ${selfAttendee.responseStatus === status ? (status === "declined" ? "border-transparent bg-[var(--color-error)] text-white" : "border-transparent bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]") : "border-[var(--color-app-border)] bg-[var(--color-app-chip)] text-[var(--color-app-text)] hover:bg-[var(--color-app-surface)]"}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
+        {isEditing ? (
+          <EventRsvpSection
+            selfAttendee={selfAttendee}
+            responding={responding || saving || deleting}
+            onRespond={handleRespond}
+          />
         ) : null}
         <div className="flex items-center justify-between border-t border-[var(--color-app-border)] px-5 py-4">
           {isEditing ? (
             <button
+              type="button"
               onClick={handleDelete}
-              disabled={deleting || saving}
+              disabled={deleting || saving || responding}
               className="text-sm font-medium text-[var(--color-error)] transition hover:opacity-80 disabled:opacity-50"
             >
               {deleting ? "Deleting…" : "Delete"}
@@ -301,14 +253,16 @@ export function EventModal({
           )}
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={onClose}
               className="rounded-full border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-4 py-2 text-sm font-medium text-[var(--color-app-text)] transition hover:bg-[var(--color-app-surface)]"
             >
               Cancel
             </button>
             <button
+              type="button"
               onClick={handleSave}
-              disabled={saving || deleting}
+              disabled={saving || deleting || responding}
               className="rounded-full bg-[var(--color-app-accent)] px-4 py-2 text-sm font-semibold text-[var(--color-app-accent-fg)] transition hover:opacity-90 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save"}

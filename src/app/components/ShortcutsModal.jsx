@@ -1,62 +1,88 @@
 "use client";
+import { useEffect, useRef } from "react";
+
+const SHORTCUT_GROUPS = [
+  {
+    title: "Global Navigation",
+    items: [
+      { key: "⌘ K / Ctrl K", desc: "Open Command Palette" },
+      { key: "?", desc: "Show keyboard shortcuts" },
+      { key: "T", desc: "Toggle dark / light theme" },
+      { key: "Esc", desc: "Close modals / clear selection" },
+    ],
+  },
+  {
+    title: "Inbox Operations",
+    items: [
+      { key: "J / ↓", desc: "Next email thread" },
+      { key: "K / ↑", desc: "Previous email thread" },
+      { key: "Enter", desc: "Open selected email" },
+      { key: "R", desc: "Jump to AI reply draft" },
+      { key: "/", desc: "Search inbox" },
+    ],
+  },
+  {
+    title: "Calendar Schedule",
+    items: [
+      { key: "C", desc: "Create new event" },
+      { key: "T", desc: "Jump to today" },
+      { key: "← / →", desc: "Previous / Next week" },
+    ],
+  },
+  {
+    title: "AI Agent Studio",
+    items: [
+      { key: "/summarize", desc: "Summarize recent unread mail" },
+      { key: "/draft", desc: "Draft a reply with context" },
+      { key: "/schedule", desc: "Schedule event via agent" },
+      { key: "Enter", desc: "Send message to agent" },
+      { key: "Shift + Enter", desc: "New line in chat prompt" },
+    ],
+  },
+];
 
 export function ShortcutsModal({ isOpen, onClose }) {
-  if (!isOpen) return null;
+  const dialogRef = useRef(null);
 
-  const shortcutGroups = [
-    {
-      title: "Global Navigation",
-      items: [
-        { key: "⌘ K / Ctrl K", desc: "Open Command Palette" },
-        { key: "?", desc: "Show keyboard shortcuts" },
-        { key: "T", desc: "Toggle dark / light theme" },
-        { key: "Esc", desc: "Close modals / clear selection" },
-      ],
-    },
-    {
-      title: "Inbox Operations",
-      items: [
-        { key: "J / ↓", desc: "Next email thread" },
-        { key: "K / ↑", desc: "Previous email thread" },
-        { key: "Enter", desc: "Open selected email" },
-        { key: "R", desc: "Jump to AI reply draft" },
-        { key: "/", desc: "Search inbox" },
-      ],
-    },
-    {
-      title: "Calendar Schedule",
-      items: [
-        { key: "C", desc: "Create new event" },
-        { key: "T", desc: "Jump to today" },
-        { key: "← / →", desc: "Previous / Next week" },
-      ],
-    },
-    {
-      title: "AI Agent Studio",
-      items: [
-        { key: "/summarize", desc: "Summarize recent unread mail" },
-        { key: "/draft", desc: "Draft a reply with context" },
-        { key: "/schedule", desc: "Schedule event via agent" },
-        { key: "Enter", desc: "Send message to agent" },
-        { key: "Shift + Enter", desc: "New line in chat prompt" },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    } else {
+      if (dialog.open) {
+        dialog.close();
+      }
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const handleBackdropClick = (e) => {
+      if (e.target === dialog) {
+        onClose();
+      }
+    };
+
+    dialog.addEventListener("click", handleBackdropClick);
+    return () => dialog.removeEventListener("click", handleBackdropClick);
+  }, [onClose]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-labelledby="shortcuts-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent p-0 flex items-center justify-center p-4 backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible open:flex closed:hidden"
     >
-      <button
-        type="button"
-        aria-label="Close shortcuts modal backdrop"
-        className="fixed inset-0 bg-black/60 backdrop-blur-md"
-        onClick={onClose}
-      />
-
       <div className="animate-scaleIn relative flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden rounded-[28px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         <div className="flex items-center justify-between border-b border-[var(--color-app-border)] px-6 py-4">
           <div className="flex items-center gap-3">
@@ -68,6 +94,7 @@ export function ShortcutsModal({ isOpen, onClose }) {
             </h2>
           </div>
           <button
+            type="button"
             onClick={onClose}
             aria-label="Close modal"
             className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)] transition"
@@ -79,7 +106,7 @@ export function ShortcutsModal({ isOpen, onClose }) {
         </div>
 
         <div className="grid gap-6 overflow-y-auto p-6 sm:grid-cols-2">
-          {shortcutGroups.map((group) => (
+          {SHORTCUT_GROUPS.map((group) => (
             <div key={group.title} className="space-y-3">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--color-app-text-soft)]">
                 {group.title}
@@ -105,6 +132,7 @@ export function ShortcutsModal({ isOpen, onClose }) {
           Press <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1.5 py-0.5 font-[family:var(--font-mono)] text-[10px]">Esc</kbd> anytime to dismiss this menu.
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }
+

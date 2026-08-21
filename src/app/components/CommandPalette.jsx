@@ -3,11 +3,119 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "./ToastProvider";
+import { CommandPaletteItem } from "./CommandPaletteItem";
+import { CommandPaletteFooter } from "./CommandPaletteFooter";
+
+function getNavigationCommands(router, toggleTheme, onClose, onOpenShortcuts) {
+  return [
+    {
+      id: "nav-inbox",
+      category: "Navigation",
+      title: "Go to Inbox",
+      subtitle: "View and manage email threads",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <path d="M3 12.5V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4.5M3 12.5v5A2 2 0 0 0 5 19.5h14a2 2 0 0 0 2-2v-5M3 12.5l6.4 4.06a4 4 0 0 0 4.3 0L21 12.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+      shortcut: "G I",
+      action: () => router.push("/emails"),
+    },
+    {
+      id: "nav-calendar",
+      category: "Navigation",
+      title: "Go to Calendar",
+      subtitle: "View upcoming events and schedule",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
+          <path d="M8 3v4M16 3v4M3.5 10h17" strokeLinecap="round" />
+        </svg>
+      ),
+      shortcut: "G C",
+      action: () => router.push("/calendar"),
+    },
+    {
+      id: "nav-agent",
+      category: "Navigation",
+      title: "Go to AI Agent Studio",
+      subtitle: "Chat with AI to draft replies and move meetings",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <rect x="4" y="8" width="16" height="11" rx="3" />
+          <path d="M12 8V5m-3 0h6" strokeLinecap="round" />
+          <circle cx="9" cy="13.5" r="1.2" fill="currentColor" />
+          <circle cx="15" cy="13.5" r="1.2" fill="currentColor" />
+        </svg>
+      ),
+      shortcut: "G A",
+      action: () => router.push("/ai-chat"),
+    },
+    {
+      id: "nav-brief",
+      category: "Navigation",
+      title: "Go to Brief / Dashboard",
+      subtitle: "Overview of integration status and live previews",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <path d="M12 3v2m0 14v2m9-9h-2M5 12H3m14.657-6.657-1.414 1.414M7.757 16.243l-1.414 1.414m0-11.314 1.414 1.414M16.243 16.243l1.414 1.414" strokeLinecap="round" />
+          <circle cx="12" cy="12" r="4" />
+        </svg>
+      ),
+      shortcut: "G D",
+      action: () => router.push("/dashboard"),
+    },
+    {
+      id: "act-new-event",
+      category: "Actions",
+      title: "Schedule New Event",
+      subtitle: "Open calendar event creation modal",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <path d="M12 5v14M5 12h14" strokeLinecap="round" />
+        </svg>
+      ),
+      shortcut: "C",
+      action: () => router.push("/calendar?create=true"),
+    },
+    {
+      id: "act-theme",
+      category: "Actions",
+      title: "Toggle Light / Dark Theme",
+      subtitle: "Switch appearance mode",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      ),
+      shortcut: "T",
+      action: toggleTheme,
+    },
+    {
+      id: "act-shortcuts",
+      category: "Actions",
+      title: "View Keyboard Shortcuts",
+      subtitle: "See all available hotkeys",
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" strokeLinecap="round" />
+        </svg>
+      ),
+      shortcut: "?",
+      action: () => {
+        onClose();
+        if (onOpenShortcuts) onOpenShortcuts();
+      },
+    },
+  ];
+}
 
 export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const router = useRouter();
+  const dialogRef = useRef(null);
   const inputRef = useRef(null);
   const listRef = useRef(null);
   const { showSuccess, showInfo } = useToast();
@@ -24,108 +132,7 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
   }, [showSuccess]);
 
   const allItems = useMemo(
-    () => [
-      {
-        id: "nav-inbox",
-        category: "Navigation",
-        title: "Go to Inbox",
-        subtitle: "View and manage email threads",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <path d="M3 12.5V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4.5M3 12.5v5A2 2 0 0 0 5 19.5h14a2 2 0 0 0 2-2v-5M3 12.5l6.4 4.06a4 4 0 0 0 4.3 0L21 12.5" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ),
-        shortcut: "G I",
-        action: () => router.push("/emails"),
-      },
-      {
-        id: "nav-calendar",
-        category: "Navigation",
-        title: "Go to Calendar",
-        subtitle: "View upcoming events and schedule",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
-            <path d="M8 3v4M16 3v4M3.5 10h17" strokeLinecap="round" />
-          </svg>
-        ),
-        shortcut: "G C",
-        action: () => router.push("/calendar"),
-      },
-      {
-        id: "nav-agent",
-        category: "Navigation",
-        title: "Go to AI Agent Studio",
-        subtitle: "Chat with AI to draft replies and move meetings",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <rect x="4" y="8" width="16" height="11" rx="3" />
-            <path d="M12 8V5m-3 0h6" strokeLinecap="round" />
-            <circle cx="9" cy="13.5" r="1.2" fill="currentColor" />
-            <circle cx="15" cy="13.5" r="1.2" fill="currentColor" />
-          </svg>
-        ),
-        shortcut: "G A",
-        action: () => router.push("/ai-chat"),
-      },
-      {
-        id: "nav-brief",
-        category: "Navigation",
-        title: "Go to Brief / Dashboard",
-        subtitle: "Overview of integration status and live previews",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <path d="M12 3v2m0 14v2m9-9h-2M5 12H3m14.657-6.657-1.414 1.414M7.757 16.243l-1.414 1.414m0-11.314 1.414 1.414M16.243 16.243l1.414 1.414" strokeLinecap="round" />
-            <circle cx="12" cy="12" r="4" />
-          </svg>
-        ),
-        shortcut: "G D",
-        action: () => router.push("/dashboard"),
-      },
-      {
-        id: "act-new-event",
-        category: "Actions",
-        title: "Schedule New Event",
-        subtitle: "Open calendar event creation modal",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <path d="M12 5v14M5 12h14" strokeLinecap="round" />
-          </svg>
-        ),
-        shortcut: "C",
-        action: () => router.push("/calendar?create=true"),
-      },
-      {
-        id: "act-theme",
-        category: "Actions",
-        title: "Toggle Light / Dark Theme",
-        subtitle: "Switch appearance mode",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        ),
-        shortcut: "T",
-        action: toggleTheme,
-      },
-      {
-        id: "act-shortcuts",
-        category: "Actions",
-        title: "View Keyboard Shortcuts",
-        subtitle: "See all available hotkeys",
-        icon: (
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" className="h-4 w-4">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3M12 17h.01" strokeLinecap="round" />
-          </svg>
-        ),
-        shortcut: "?",
-        action: () => {
-          onClose();
-          if (onOpenShortcuts) onOpenShortcuts();
-        },
-      },
-    ],
+    () => getNavigationCommands(router, toggleTheme, onClose, onOpenShortcuts),
     [router, toggleTheme, onClose, onOpenShortcuts]
   );
 
@@ -140,16 +147,46 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
     );
   }, [allItems, query]);
 
+  const handleClose = useCallback(() => {
+    setQuery("");
+    setSelectedIndex(0);
+    onClose();
+  }, [onClose]);
+
   useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
     if (isOpen) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
       inputRef.current?.focus();
+    } else {
+      if (dialog.open) {
+        dialog.close();
+      }
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+
+    const handleBackdropClick = (e) => {
+      if (e.target === dialog) {
+        handleClose();
+      }
+    };
+
+    dialog.addEventListener("click", handleBackdropClick);
+    return () => dialog.removeEventListener("click", handleBackdropClick);
+  }, [handleClose]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Escape") {
       e.preventDefault();
-      onClose();
+      handleClose();
       return;
     }
 
@@ -171,33 +208,25 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
       e.preventDefault();
       if (filteredItems.length > 0 && filteredItems[selectedIndex]) {
         filteredItems[selectedIndex].action();
-        onClose();
+        handleClose();
       } else if (query.trim()) {
-        // Fallback: Ask AI agent
         showInfo(`Asking AI: "${query}"`);
         router.push(`/ai-chat?q=${encodeURIComponent(query)}`);
-        onClose();
+        handleClose();
       }
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
       aria-label="Command Palette"
-      className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16 sm:pt-24"
+      onCancel={(e) => {
+        e.preventDefault();
+        handleClose();
+      }}
+      className="fixed inset-0 z-50 m-0 h-full w-full max-h-none max-w-none bg-transparent p-0 flex items-start justify-center px-4 pt-16 sm:pt-24 backdrop:bg-black/60 backdrop:backdrop-blur-md border-none outline-none overflow-visible open:flex closed:hidden"
     >
-      {/* Backdrop */}
-      <button
-        type="button"
-        aria-label="Close command palette"
-        className="fixed inset-0 bg-black/60 backdrop-blur-md transition-opacity"
-        onClick={onClose}
-      />
-
       {/* Palette Card */}
       <div className="animate-scaleIn relative flex w-full max-w-xl flex-col overflow-hidden rounded-[26px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] shadow-[0_24px_70px_rgba(0,0,0,0.55)] backdrop-blur-2xl">
         {/* Search Header */}
@@ -240,6 +269,7 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
         >
           {filteredItems.length === 0 && query.trim() ? (
             <button
+              type="button"
               onClick={() => {
                 showInfo(`Asking AI: "${query}"`);
                 router.push(`/ai-chat?q=${encodeURIComponent(query)}`);
@@ -267,70 +297,23 @@ export function CommandPalette({ isOpen, onClose, onOpenShortcuts }) {
             </button>
           ) : null}
 
-          {filteredItems.map((item, index) => {
-            const isSelected = index === selectedIndex;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  item.action();
-                  onClose();
-                }}
-                onMouseEnter={() => setSelectedIndex(index)}
-                className={`flex w-full items-center gap-3 rounded-[14px] px-3.5 py-2.5 text-left transition ${
-                  isSelected
-                    ? "bg-[var(--color-app-surface-strong)] text-[var(--color-app-text)] border border-[var(--color-app-border-strong)]"
-                    : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)] border border-transparent"
-                }`}
-              >
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] ${
-                    isSelected
-                      ? "bg-[var(--color-app-accent)] text-[var(--color-app-accent-fg)]"
-                      : "bg-[var(--color-app-surface)] text-[var(--color-app-text-soft)]"
-                  }`}
-                >
-                  {item.icon}
-                </span>
-
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="truncate text-xs font-semibold text-[var(--color-app-text)]">
-                      {item.title}
-                    </span>
-                    <span className="rounded-full bg-[var(--color-app-surface)] px-1.5 py-0.5 text-[9px] uppercase tracking-wider text-[var(--color-app-text-soft)]">
-                      {item.category}
-                    </span>
-                  </div>
-                  <p className="truncate text-[11px] text-[var(--color-app-text-muted)]">
-                    {item.subtitle}
-                  </p>
-                </div>
-
-                {item.shortcut ? (
-                  <span className="shrink-0 rounded-[6px] border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1.5 py-0.5 font-[family:var(--font-mono)] text-[10px] font-semibold text-[var(--color-app-text-soft)]">
-                    {item.shortcut}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
+          {filteredItems.map((item, index) => (
+            <CommandPaletteItem
+              key={item.id}
+              item={item}
+              isSelected={index === selectedIndex}
+              onSelect={() => {
+                item.action();
+                onClose();
+              }}
+              onHover={() => setSelectedIndex(index)}
+            />
+          ))}
         </div>
 
-        {/* Footer hints */}
-        <div className="flex items-center justify-between border-t border-[var(--color-app-border)] bg-[var(--color-app-surface)] px-4 py-2 text-[10px] text-[var(--color-app-text-soft)] sm:px-5">
-          <div className="flex items-center gap-3">
-            <span>
-              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)] font-semibold">↑</kbd>{" "}
-              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)] font-semibold">↓</kbd> navigate
-            </span>
-            <span>
-              <kbd className="rounded border border-[var(--color-app-border)] bg-[var(--color-app-chip)] px-1 py-0.5 font-[family:var(--font-mono)] font-semibold">↵</kbd> select
-            </span>
-          </div>
-          <span className="hidden sm:inline">Relay Command v1.0</span>
-        </div>
+        <CommandPaletteFooter />
       </div>
-    </div>
+    </dialog>
   );
 }
+

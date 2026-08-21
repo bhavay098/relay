@@ -11,6 +11,13 @@ import { getAuthUserId } from "@/server/getAuthUserId.js";
 // POST /api/calendar/[id]/respond — RSVP to an event
 // Body: { status: "accepted" | "declined" | "tentativelyAccepted" | "tentative" }
 
+const VALID_STATUSES = [
+  "accepted",
+  "declined",
+  "tentativelyAccepted",
+  "tentative",
+];
+
 export async function POST(request, { params }) {
   const userId = await getAuthUserId();
   if (!userId)
@@ -28,16 +35,10 @@ export async function POST(request, { params }) {
   const { status } = body;
 
   // Validate RSVP status
-  const validStatuses = [
-    "accepted",
-    "declined",
-    "tentativelyAccepted",
-    "tentative",
-  ];
-  if (!status || !validStatuses.includes(status)) {
+  if (!status || !VALID_STATUSES.includes(status)) {
     return NextResponse.json(
       {
-        error: `Invalid status. Must be one of: ${validStatuses.join(", ")}`,
+        error: `Invalid status. Must be one of: ${VALID_STATUSES.join(", ")}`,
       },
       { status: 400 },
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CalendarHeader } from "./components/CalendarHeader";
 import { EventModal } from "./components/EventModal";
@@ -14,8 +14,9 @@ import {
   startOfWeek,
 } from "./utils.js";
 import { useToast } from "../../components/ToastProvider";
+import { apiFetch } from "../../../lib/api";
 
-export default function CalendarPage() {
+function CalendarContent() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -27,25 +28,28 @@ export default function CalendarPage() {
   const searchParams = useSearchParams();
   const { showSuccess, showError } = useToast();
 
+  const openCreateModal = useCallback((date, hour) => {
+    const start = new Date(date);
+    start.setHours(hour, 0, 0, 0);
+    const end = new Date(start);
+    end.setHours(hour + 1, 0, 0, 0);
+    setModalState({ event: null, start, end });
+  }, []);
+
   // Handle ?create=true from command palette
   useEffect(() => {
     if (searchParams.get("create") === "true") {
       const now = new Date();
       openCreateModal(now, now.getHours());
     }
-  }, [searchParams]);
+  }, [searchParams, openCreateModal]);
 
-  async function loadEvents() {
+  async function loadEvents(signal) {
     try {
-      const response = await fetch("/api/calendar");
-      const data = await response.json();
-      if (!response.ok) {
-        console.error("Calendar page error response:", data);
-        setError(CALENDAR_PAGE_ERROR);
-        return;
-      }
+      const data = await apiFetch("/api/calendar", { signal });
       setEvents(data.events ?? []);
     } catch (caughtError) {
+      if (caughtError.name === "AbortError") return;
       console.error(caughtError);
       setError(CALENDAR_PAGE_ERROR);
     } finally {
@@ -57,27 +61,23 @@ export default function CalendarPage() {
     setRefreshing(true);
     setError(null);
     try {
-      const response = await fetch("/api/calendar/refresh", { method: "POST" });
-      const data = await response.json();
-      if (!response.ok) {
-        const errMsg = data.error ?? CALENDAR_PAGE_ERROR;
-        setError(errMsg);
-        showError(errMsg);
-        return;
-      }
+      const data = await apiFetch("/api/calendar/refresh", { method: "POST" });
       setEvents(data.events ?? []);
       showSuccess(`Calendar synced: ${data.events?.length ?? 0} events loaded`);
     } catch (caughtError) {
       console.error(caughtError);
-      setError(CALENDAR_PAGE_ERROR);
-      showError(CALENDAR_PAGE_ERROR);
+      const errMsg = caughtError.data?.error ?? CALENDAR_PAGE_ERROR;
+      setError(errMsg);
+      showError(errMsg);
     } finally {
       setRefreshing(false);
     }
   }, [showSuccess, showError]);
 
   useEffect(() => {
-    loadEvents();
+    const controller = new AbortController();
+    loadEvents(controller.signal);
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -98,72 +98,54 @@ export default function CalendarPage() {
     for (const event of events) {
       const { start, end, isAllDay } = getEventRange(event);
       if (!start) continue;
-      for (let index = 0; index < 7; index++) {
-        if (!isSameDay(start, days[index])) continue;
-        if (isAllDay) allDay[index].push(event);
-        else timed[index].push({ event, start, end: end ?? start });
-        break;
+      for (let i = 0; i < days.length; i++) {
+        const day = days[i];
+        if (isSameDay(start, day)) {
+          if (isAllDay) {
+            allDay[i].push(event);
+          } else {
+            timed[i].push({ event, start, end });
+          }
+          break;
+        }
       }
     }
     return { allDayByDay: allDay, timedByDay: timed };
   }, [events, days]);
 
-  function openCreateModal(day, hour) {
-    const start = new Date(day);
-    start.setHours(hour, 0, 0, 0);
-    const end = new Date(start);
-    end.setHours(start.getHours() + 1);
-    setModalState({ event: null, start, end });
-  }
-
-  function handleSaved(savedEvent) {
-    setEvents((current) =>
-      current.some((event) => event.id === savedEvent.id)
-        ? current.map((event) => (event.id === savedEvent.id ? savedEvent : event))
-        : [...current, savedEvent]
-    );
-    setModalState(null);
-    showSuccess("Event saved successfully");
-  }
-
-  function handleDeleted(eventId) {
-    setEvents((current) => current.filter((event) => event.id !== eventId));
-    setModalState(null);
-    showSuccess("Event removed from calendar");
-  }
-
-  // Keyboard navigation for Calendar: C to create, T for today, ArrowLeft/ArrowRight for weeks
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) || modalState) return;
-
-      if (e.key.toLowerCase() === "c") {
-        e.preventDefault();
-        const now = new Date();
-        openCreateModal(now, now.getHours());
-      } else if (e.key.toLowerCase() === "t") {
-        e.preventDefault();
-        setWeekStart(startOfWeek(new Date()));
-        showSuccess("Jumped to current week");
+  const handleSaved = useCallback((savedEvent) => {
+    setEvents((prev) => {
+      const existing = prev.some((e) => e.id === savedEvent.id);
+      if (existing) {
+        return prev.map((e) => (e.id === savedEvent.id ? savedEvent : e));
       }
-    };
+      return [...prev, savedEvent];
+    });
+    setModalState(null);
+  }, []);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [modalState, showSuccess]);
+  const handleDeleted = useCallback((deletedId) => {
+    setEvents((prev) => prev.filter((e) => e.id !== deletedId));
+    setModalState(null);
+  }, []);
 
   return (
-    <div className="mx-auto flex min-w-0 max-w-[1400px] flex-col gap-4 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-4">
       <CalendarHeader
         weekStart={weekStart}
-        refreshing={refreshing}
-        onWeekStartChange={setWeekStart}
+        onPrevWeek={() => setWeekStart((prev) => addDays(prev, -7))}
+        onNextWeek={() => setWeekStart((prev) => addDays(prev, 7))}
+        onToday={() => setWeekStart(startOfWeek(new Date()))}
+        onNewEvent={() => {
+          const now = new Date();
+          openCreateModal(now, now.getHours() + 1);
+        }}
         onRefresh={handleRefresh}
-        onCreate={() => openCreateModal(new Date(), new Date().getHours())}
+        refreshing={refreshing}
       />
 
       {error ? (
-        <div className="shrink-0 rounded-[22px] border border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.08)] px-4 py-4 text-sm text-[var(--color-error)]">
+        <div className="rounded-[18px] border border-[rgba(239,68,68,0.22)] bg-[rgba(239,68,68,0.08)] px-4 py-3 text-sm text-[var(--color-error)]">
           {error}
         </div>
       ) : null}
@@ -172,7 +154,6 @@ export default function CalendarPage() {
         loading={loading}
         weekStart={weekStart}
         days={days}
-        today={weekStart ? new Date() : null}
         allDayByDay={allDayByDay}
         timedByDay={timedByDay}
         gridScrollRef={gridScrollRef}
@@ -197,5 +178,13 @@ export default function CalendarPage() {
         />
       ) : null}
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <Suspense fallback={null}>
+      <CalendarContent />
+    </Suspense>
   );
 }

@@ -2,8 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { apiFetch } from "../../../../lib/api";
 
 const CALENDAR_PREVIEW_ERROR = "Could not load upcoming events right now.";
+const MONTH_NAMES = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 
 // Turn a Google Calendar start object into a short readable string,
 // e.g. "Jul 14, 3:00 PM" or "Jul 14" for all-day events.
@@ -14,44 +29,33 @@ function formatEventTime(start) {
   const date = new Date(raw);
   if (Number.isNaN(date.getTime())) return "";
 
+  const month = MONTH_NAMES[date.getMonth()];
+  const day = date.getDate();
+
   if (start?.dateTime) {
-    return date.toLocaleString(undefined, {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    const hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+    return `${month} ${day}, ${displayHour}:${minutes} ${period}`;
   }
 
-  return date.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-  });
+  return `${month} ${day}`;
 }
 
 export function CalendarPreview({ refreshKey }) {
-  // "upcoming" is computed inside the effect below (not during render)
-  // so the impure Date.now() call never runs while React is rendering
-  // the component - it only runs in response to data loading, which is
-  // the correct place for "current time" logic.
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function loadEvents() {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/calendar");
-        const data = await res.json();
+    const controller = new AbortController();
+    setLoading(true);
 
-        if (!res.ok) {
-          console.error("Calendar preview error response:", data);
-          setError(CALENDAR_PREVIEW_ERROR);
-          return;
-        }
-
-        const fetchedEvents = data.events ?? [];
+    apiFetch("/api/calendar", { signal: controller.signal })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        const fetchedEvents = data?.events ?? [];
 
         const nowMs = Date.now();
         const nextUpcoming = fetchedEvents
@@ -73,15 +77,21 @@ export function CalendarPreview({ refreshKey }) {
 
         setUpcoming(nextUpcoming);
         setError(null);
-      } catch (err) {
+      })
+      .catch((err) => {
+        if (controller.signal.aborted || err?.name === "AbortError") return;
         console.error(err);
         setError(CALENDAR_PREVIEW_ERROR);
-      } finally {
-        setLoading(false);
-      }
-    }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
+      });
 
-    loadEvents();
+    return () => {
+      controller.abort();
+    };
   }, [refreshKey]);
 
   return (

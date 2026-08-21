@@ -9,6 +9,7 @@ import { ReadingPaneEmpty } from "./components/ReadingPaneEmpty";
 import { RowSkeleton } from "./components/RowSkeleton";
 import { EMAILS_ERROR, formatSender, formatSenderEmail } from "./utils";
 import { useToast } from "../../components/ToastProvider";
+import { apiFetch } from "../../../lib/api";
 
 export default function EmailsPage() {
   const [messages, setMessages] = useState([]);
@@ -22,33 +23,28 @@ export default function EmailsPage() {
 
   useEffect(() => {
     const controller = new AbortController();
+    setLoading(true);
+    setError(null);
 
-    async function loadEmails() {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`/api/gmail?mailbox=${mailbox}`, {
-          signal: controller.signal,
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          console.error("Emails page error response:", data);
-          setError(EMAILS_ERROR);
-          return;
+    apiFetch(`/api/gmail?mailbox=${mailbox}`, { signal: controller.signal })
+      .then((data) => {
+        if (controller.signal.aborted) return;
+        setMessages(data?.messages ?? []);
+      })
+      .catch((caughtError) => {
+        if (controller.signal.aborted || caughtError?.name === "AbortError") return;
+        console.error("Emails page error:", caughtError);
+        setError(EMAILS_ERROR);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoading(false);
         }
-        setMessages(data.messages ?? []);
-      } catch (caughtError) {
-        if (caughtError.name !== "AbortError") {
-          console.error(caughtError);
-          setError(EMAILS_ERROR);
-        }
-      } finally {
-        if (!controller.signal.aborted) setLoading(false);
-      }
-    }
+      });
 
-    loadEmails();
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, [mailbox]);
 
   const handleRefresh = useCallback(async () => {

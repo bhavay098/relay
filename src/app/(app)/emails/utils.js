@@ -1,7 +1,29 @@
-import { getDeterministicHue } from "../components/colorUtils";
-
 export const EMAILS_ERROR = "Could not load emails right now.";
-const AVATAR_HUES = [210, 260, 320, 20, 160, 190, 280, 40];
+
+const timeFormatter = new Intl.DateTimeFormat(undefined, {
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+const sameYearDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+});
+
+const otherYearDateFormatter = new Intl.DateTimeFormat(undefined, {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+});
+
+const fullDateFormatter = new Intl.DateTimeFormat(undefined, {
+  weekday: "short",
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
 
 export function parseFromString(raw) {
   if (!raw) return { name: "", email: "" };
@@ -24,21 +46,23 @@ export function formatSenderEmail(from) {
   return typeof from === "object" ? from.email || "" : "";
 }
 
-export function getInitials(name) { return name?.trim()?.[0]?.toUpperCase() ?? "?"; }
-export function getAvatarHue(seed) { return getDeterministicHue(seed, AVATAR_HUES); }
-
 export function formatMessageDate(internalDate) {
   const date = new Date(Number(internalDate));
   if (!internalDate || Number.isNaN(date.getTime())) return "";
   const now = new Date();
-  if (date.toDateString() === now.toDateString()) return new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
-  return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: date.getFullYear() === now.getFullYear() ? undefined : "numeric" }).format(date);
+  if (date.toDateString() === now.toDateString()) {
+    return timeFormatter.format(date);
+  }
+  if (date.getFullYear() === now.getFullYear()) {
+    return sameYearDateFormatter.format(date);
+  }
+  return otherYearDateFormatter.format(date);
 }
 
 export function formatFullDate(internalDate) {
   const date = new Date(Number(internalDate));
   if (!internalDate || Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+  return fullDateFormatter.format(date);
 }
 
 export function toPlainText(html) {

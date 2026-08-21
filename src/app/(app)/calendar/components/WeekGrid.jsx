@@ -13,12 +13,33 @@ import {
 
 // Minimum width for a single day column
 const DAY_COLUMN_MIN_WIDTH = 120;
+const WEEKDAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function formatEventTimeLabel(date) {
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  const period = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 === 0 ? 12 : hours % 12;
+  const displayMinutes = String(minutes).padStart(2, "0");
+  return `${displayHour}:${displayMinutes} ${period}`;
+}
+
+function eventTopAndHeight(start, end) {
+  const startHour = start.getHours() + start.getMinutes() / 60;
+  const endHour = Math.max(
+    startHour + 0.25,
+    end.getHours() + end.getMinutes() / 60
+  );
+  return {
+    top: (startHour - START_HOUR) * HOUR_HEIGHT,
+    height: (endHour - startHour) * HOUR_HEIGHT,
+  };
+}
 
 export function WeekGrid({
   loading,
   weekStart,
   days,
-  today: initialToday,
   allDayByDay,
   timedByDay,
   gridScrollRef,
@@ -39,18 +60,6 @@ export function WeekGrid({
     { length: END_HOUR - START_HOUR },
     (_, index) => START_HOUR + index
   );
-
-  const eventTopAndHeight = (start, end) => {
-    const startHour = start.getHours() + start.getMinutes() / 60;
-    const endHour = Math.max(
-      startHour + 0.25,
-      end.getHours() + end.getMinutes() / 60
-    );
-    return {
-      top: (startHour - START_HOUR) * HOUR_HEIGHT,
-      height: (endHour - startHour) * HOUR_HEIGHT,
-    };
-  };
 
   if (loading || !weekStart) {
     return (
@@ -78,16 +87,16 @@ export function WeekGrid({
           style={{ minWidth: days.length * DAY_COLUMN_MIN_WIDTH + 56 }}
         >
           <div className="w-14 shrink-0 sm:w-16" />
-          {days.map((day, index) => {
+          {days.map((day) => {
             const isToday = isSameDay(day, currentTime);
             return (
               <div
-                key={index}
+                key={day.toISOString()}
                 className="flex flex-1 flex-col items-center gap-1 border-l border-[var(--color-app-border)] py-2.5"
                 style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
               >
                 <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${isToday ? "text-[var(--color-app-accent)]" : "text-[var(--color-app-text-soft)]"}`}>
-                  {day.toLocaleDateString(CALENDAR_LOCALE, { weekday: "short" })}
+                  {WEEKDAY_NAMES[day.getDay()]}
                 </span>
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold ${
@@ -112,26 +121,29 @@ export function WeekGrid({
             <div className="flex w-14 shrink-0 items-start justify-end pr-2 pt-1.5 text-[10px] uppercase font-semibold tracking-wider text-[var(--color-app-text-soft)] sm:w-16">
               All day
             </div>
-            {allDayByDay.map((dayEvents, index) => (
-              <div
-                key={index}
-                className="flex flex-1 flex-col gap-1 border-l border-[var(--color-app-border)] p-1"
-                style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
-              >
-                {dayEvents.map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => onEdit(event)}
-                    className="truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white transition hover:brightness-110 shadow-sm"
-                    style={{
-                      background: `linear-gradient(135deg, hsl(${getEventHue(event.id)} 65% 42%), hsl(${getEventHue(event.id)} 65% 36%))`,
-                    }}
-                  >
-                    {event.summary ?? "(no title)"}
-                  </button>
-                ))}
-              </div>
-            ))}
+            {days.map((day, dayIdx) => {
+              const dayEvents = allDayByDay[dayIdx] ?? [];
+              return (
+                <div
+                  key={day.toISOString()}
+                  className="flex flex-1 flex-col gap-1 border-l border-[var(--color-app-border)] p-1"
+                  style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
+                >
+                  {dayEvents.map((event) => (
+                    <button
+                      key={event.id}
+                      onClick={() => onEdit(event)}
+                      className="truncate rounded-md px-2 py-1 text-left text-xs font-medium text-white transition hover:brightness-110 shadow-sm"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${getEventHue(event.id)} 65% 42%), hsl(${getEventHue(event.id)} 65% 36%))`,
+                      }}
+                    >
+                      {event.summary ?? "(no title)"}
+                    </button>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         ) : null}
 
@@ -164,7 +176,7 @@ export function WeekGrid({
               const isToday = isSameDay(day, currentTime);
               return (
                 <div
-                  key={dayIndex}
+                  key={day.toISOString()}
                   className={`relative flex-1 border-l border-[var(--color-app-border)] ${isToday ? "bg-[var(--color-app-accent-soft)]/20" : ""}`}
                   style={{ minWidth: DAY_COLUMN_MIN_WIDTH }}
                 >
@@ -217,10 +229,7 @@ export function WeekGrid({
                         </p>
                         {height > 30 ? (
                           <p className="truncate text-[10px] font-medium leading-tight text-white/80 mt-0.5 font-[family:var(--font-mono)]">
-                            {start.toLocaleTimeString(CALENDAR_LOCALE, {
-                              hour: "numeric",
-                              minute: "2-digit",
-                            })}
+                            {formatEventTimeLabel(start)}
                           </p>
                         ) : null}
                       </button>

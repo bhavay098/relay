@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore, useCallback, useEffect } from "react";
 
 const STORAGE_KEY = "relay-theme";
 
@@ -8,6 +8,40 @@ function applyTheme(theme) {
   const root = document.documentElement;
   root.dataset.theme = theme;
   root.style.colorScheme = theme;
+}
+
+function subscribe(callback) {
+  window.addEventListener("storage", callback);
+  const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
+  mediaQuery.addEventListener("change", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    mediaQuery.removeEventListener("change", callback);
+  };
+}
+
+function getSnapshot() {
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (stored === "dark" || stored === "light") {
+    return stored;
+  }
+  return window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+}
+
+function getServerSnapshot() {
+  return "dark";
+}
+
+function getMountedSnapshot() {
+  return true;
+}
+
+function getMountedServerSnapshot() {
+  return false;
+}
+
+function subscribeMounted() {
+  return () => {};
 }
 
 function SunIcon() {
@@ -53,35 +87,21 @@ function MoonIcon() {
 }
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState("dark");
-  const [mounted, setMounted] = useState(false);
+  const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const mounted = useSyncExternalStore(subscribeMounted, getMountedSnapshot, getMountedServerSnapshot);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    const nextTheme =
-      stored === "dark" || stored === "light"
-        ? stored
-        : window.matchMedia("(prefers-color-scheme: light)").matches
-          ? "light"
-          : "dark";
-
-    setTheme(nextTheme);
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) {
-      return;
-    }
-
     applyTheme(theme);
-    window.localStorage.setItem(STORAGE_KEY, theme);
-  }, [mounted, theme]);
+  }, [theme]);
 
-  function toggleTheme() {
+  const toggleTheme = useCallback(() => {
     const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-  }
+    applyTheme(nextTheme);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, nextTheme);
+      window.dispatchEvent(new Event("storage"));
+    } catch {}
+  }, [theme]);
 
   return (
     <button
@@ -94,3 +114,4 @@ export function ThemeToggle() {
     </button>
   );
 }
+

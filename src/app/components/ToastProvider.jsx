@@ -53,7 +53,7 @@ export function ToastProvider({ children }) {
           <div
             key={item.id}
             role="status"
-            className="animate-fadeInUp pointer-events-auto flex max-w-md items-center gap-3 rounded-[18px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] px-4 py-3 text-xs font-medium text-[var(--color-app-text)] shadow-[0_16px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-all"
+            className="animate-fadeInUp pointer-events-auto flex max-w-md items-center gap-3 rounded-[18px] border border-[var(--color-app-border-strong)] bg-[var(--color-app-panel-strong)] px-4 py-3 text-xs font-medium text-[var(--color-app-text)] shadow-[0_16px_36px_rgba(0,0,0,0.35)] backdrop-blur-2xl transition-colors"
           >
             {item.type === "success" && (
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[rgba(16,185,129,0.18)] text-[var(--color-success)]">

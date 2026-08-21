@@ -238,7 +238,7 @@ export function RichEmailViewer({ html, text, snippet }) {
 
   if (hasHtml) {
     return (
-      <div className="overflow-hidden rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] shadow-sm transition-all">
+      <div className="overflow-hidden rounded-[18px] border border-[var(--color-app-border)] bg-[var(--color-app-surface)] shadow-sm transition-colors">
         <iframe
           ref={iframeRef}
           srcDoc={framedHtml}

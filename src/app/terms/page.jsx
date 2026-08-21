@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { HomeNavbar } from "../components/home/HomeNavbar.jsx";
 import { HomeFooter } from "../components/home/HomeFooter.jsx";
 
@@ -67,12 +68,12 @@ export default function TermsOfServicePage() {
               Google&rsquo;s OAuth authorization. By connecting your Google
               account, you authorize Relay to access the Gmail and Calendar data
               needed to provide its features, subject to our{" "}
-              <a
+              <Link
                 href="/privacy"
                 className="underline decoration-[var(--color-app-border-strong)] underline-offset-2 hover:text-[var(--color-app-text)]"
               >
                 Privacy Policy
-              </a>
+              </Link>
               . You can revoke this access at any time from within Relay or from
               your Google Account settings.
             </p>

@@ -149,13 +149,19 @@ export async function readHydratedGmailMessages(
 
 export async function readHydratedGmailMessagesById(tenant, messageIds) {
   const rows = await tenant.gmail.db.messages.findManyByEntityIds(messageIds);
-  const messagesById = new Map(
-    rows
-      .filter((row) => isHydratedGmailMessage(row.data))
-      .map((row) => [row.entity_id, row.data]),
-  );
+  const messagesById = new Map();
+  for (const row of rows) {
+    if (isHydratedGmailMessage(row.data)) {
+      messagesById.set(row.entity_id, row.data);
+    }
+  }
 
-  return messageIds
-    .map((id) => messagesById.get(id))
-    .filter(Boolean);
+  const result = [];
+  for (const id of messageIds) {
+    const message = messagesById.get(id);
+    if (message) {
+      result.push(message);
+    }
+  }
+  return result;
 }

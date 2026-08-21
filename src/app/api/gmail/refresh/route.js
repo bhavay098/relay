@@ -55,9 +55,12 @@ export async function POST(request) {
       labelIds: [label],
     });
 
-    const messageIds = (list.messages ?? [])
-      .map((message) => message.id)
-      .filter(Boolean);
+    const messageIds = [];
+    for (const message of list.messages ?? []) {
+      if (message.id) {
+        messageIds.push(message.id);
+      }
+    }
 
     await hydrateMessages(tenant, messageIds);
 

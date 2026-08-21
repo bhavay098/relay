@@ -1,14 +1,14 @@
 "use client";
 
+function connectGmail() {
+  window.location.href = "/api/auth/gmail/connect";
+}
+
+function connectCalendar() {
+  window.location.href = "/api/auth/googlecalendar/connect";
+}
+
 export function ConnectButtons() {
-  function connectGmail() {
-    window.location.href = "/api/auth/gmail/connect";
-  }
-
-  function connectCalendar() {
-    window.location.href = "/api/auth/googlecalendar/connect";
-  }
-
   return (
     <div className="grid gap-3 sm:grid-cols-2">
       <button

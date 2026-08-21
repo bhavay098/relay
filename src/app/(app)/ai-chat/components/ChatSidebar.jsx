@@ -108,6 +108,7 @@ export function ChatSidebar({
                     {isRenaming ? (
                       <input
                         autoFocus
+                        aria-label="Rename conversation"
                         value={renameValue}
                         onChange={(e) => onRenameValueChange(e.target.value)}
                         onBlur={() => onSubmitRename(conversation.id)}
@@ -119,28 +120,24 @@ export function ChatSidebar({
                         className="w-full rounded-[12px] border border-[var(--color-app-accent)] bg-[var(--color-app-surface)] px-3 py-2 text-sm text-[var(--color-app-text)] outline-none"
                       />
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => onOpenConversation(conversation.id)}
+                      <div
                         className={`group flex w-full items-center gap-2 rounded-[12px] px-3 py-2 text-left text-sm transition ${
                           isActive
                             ? "bg-[var(--color-app-accent-soft)] text-[var(--color-app-text)]"
                             : "text-[var(--color-app-text-muted)] hover:bg-[var(--color-app-surface-soft)]"
                         }`}
                       >
-                        <span className="min-w-0 flex-1 truncate">
+                        <button
+                          type="button"
+                          onClick={() => onOpenConversation(conversation.id)}
+                          className="min-w-0 flex-1 truncate text-left focus:outline-none"
+                        >
                           {conversation.title || "New conversation"}
-                        </span>
+                        </button>
                         <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                          <span
-                            role="button"
-                            tabIndex={0}
+                          <button
+                            type="button"
                             onClick={(e) => onStartRenaming(conversation, e)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                onStartRenaming(conversation, e);
-                              }
-                            }}
                             aria-label="Rename conversation"
                             className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-app-text)]"
                           >
@@ -159,18 +156,12 @@ export function ChatSidebar({
                                 strokeLinejoin="round"
                               />
                             </svg>
-                          </span>
-                          <span
-                            role="button"
-                            tabIndex={0}
+                          </button>
+                          <button
+                            type="button"
                             onClick={(e) =>
                               onDeleteConversation(conversation.id, e)
                             }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                onDeleteConversation(conversation.id, e);
-                              }
-                            }}
                             aria-label="Delete conversation"
                             className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--color-app-text-soft)] hover:bg-[var(--color-app-surface)] hover:text-[var(--color-error)]"
                           >
@@ -189,9 +180,9 @@ export function ChatSidebar({
                                 strokeLinejoin="round"
                               />
                             </svg>
-                          </span>
+                          </button>
                         </span>
-                      </button>
+                      </div>
                     )}
                   </li>
                 );
