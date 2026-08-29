@@ -1,6 +1,7 @@
 import { Inter } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ui } from "@clerk/ui";
 import "@/globals.css";
 import { Agentation } from "agentation";
 import { IdleSignOut } from "./components/auth/IdleSignOut";
@@ -29,9 +30,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" ui={ui}>
       <html lang="en" data-scroll-behavior="smooth" className={inter.variable} suppressHydrationWarning>
         <head>
+          <meta name="darkreader-lock" />
           <Script id="relay-theme-init" strategy="beforeInteractive">
             {`
               (function () {
