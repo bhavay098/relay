@@ -812,3 +812,51 @@ body {
   background: color-mix(in srgb, var(--color-app-surface-strong) 78%, transparent);
   font-weight: 700;
 }
+
+/* ═══════════ Clerk Auth Theming ═══════════ */
+
+.auth-clerk .cl-rootBox,
+.auth-clerk .cl-cardBox,
+.auth-clerk .cl-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.auth-clerk .cl-footer,
+.auth-clerk .cl-footerAction,
+.auth-clerk .cl-footerPages,
+.auth-clerk [class*="footer"],
+.auth-clerk [class*="Footer"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border-top: 1px solid var(--color-app-border) !important;
+}
+
+.auth-clerk .cl-footerActionText,
+.auth-clerk [class*="footerActionText"],
+.auth-clerk .cl-footerActionText * {
+  color: var(--color-app-text-muted) !important;
+}
+
+.auth-clerk .cl-footerActionLink,
+.auth-clerk [class*="footerActionLink"] {
+  color: var(--color-app-accent) !important;
+}
+
+.auth-clerk .cl-footerActionLink:hover,
+.auth-clerk [class*="footerActionLink"]:hover {
+  color: var(--color-accent-hover) !important;
+}
+
+.auth-clerk [class*="footerPagesLink"],
+.auth-clerk [class*="securedBy"] {
+  color: var(--color-app-text-soft) !important;
+  opacity: 0.8;
+}
+
